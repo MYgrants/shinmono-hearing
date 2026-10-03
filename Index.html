@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ヒアリング</title>
+<style>
+  /* 配色はここだけで変更できます（申請サポートガイドの配色に合わせています） */
+  :root {
+    --ink: #1d1d1f;          /* 文字 */
+    --sub: #6e6e73;          /* 補足の文字 */
+    --line: #e8e8ed;         /* 区切り線 */
+    --line-strong: #d2d2d7;  /* 入力欄・表の枠 */
+    --surface: #fbfbfd;      /* カードの面 */
+    --field: #f5f5f7;        /* 入力欄・副ボタンの面 */
+    --ph: #75757a;           /* 入力欄の中の薄い文字 */
+    --accent: #362478;       /* アクセント（インディゴ） */
+    --accent-dark: #271a5c;
+    --accent-tint: #f3f1fa;  /* 選んだ状態の薄い面 */
+    --error: #a8403b;        /* 入力もれ・不備の表示 */
+    --radius: 14px;
+    --radius-lg: 28px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: #fff; color: var(--ink); font-size: 16px; line-height: 1.8; letter-spacing: .02em;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px 140px; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  /* 上部バー */
+  .bar {
+    position: sticky; top: 0; z-index: 5; background: rgba(255,255,255,.92); border-bottom: 1px solid var(--line);
+    -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px);
+    display: flex; flex-wrap: wrap; gap: 6px 24px; align-items: center; justify-content: space-between;
+    padding: 12px 0; font-size: 13px; color: var(--sub);
+  }
+  .bar .left { display: flex; gap: 6px 20px; flex-wrap: wrap; align-items: center; }
+  .bar .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 700; font-size: 15px; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
+
+  /* タイトル */
+  .hero { text-align: center; padding: 88px 0 24px; }
+  .hero .eyebrow { margin: 0 0 20px; font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: .04em; }
+  .hero h1 { text-wrap: balance; font-size: clamp(30px, 5.4vw, 52px); line-height: 1.3; margin: 0; font-weight: 800; letter-spacing: .01em; color: var(--ink); }
+  .hero h1 .accent { color: var(--accent); }
+  .hero p { margin: 0 0 6px; font-size: 15px; }
+  .hero .lead { color: var(--sub); max-width: 640px; margin: 28px auto 0; font-size: 16px; }
+  .badge { display: inline-block; background: var(--field); color: var(--accent); font-weight: 700; font-size: 14px; padding: 6px 20px; margin: 28px 0 0; border-radius: 999px; letter-spacing: .04em; }
+  .hero .req { margin-top: 20px; }
+  .notice { background: var(--field); padding: 16px 24px; margin: 40px 0 0; font-size: 14px; border-radius: var(--radius); color: var(--ink); }
+  .notice + .notice { margin-top: 12px; }
+
+  /* 申請枠の選択（URLで枠が決まっていないとき） */
+  .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin: 48px 0 0; text-align: left; }
+  a.choice { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 36px 32px 32px; color: var(--ink); text-decoration: none; }
+  a.choice:hover { border-color: var(--accent); background: #fff; }
+  a.choice b { display: block; font-size: 22px; line-height: 1.5; text-wrap: balance; word-break: auto-phrase; }
+  a.choice .desc { display: block; font-size: 15px; color: var(--sub); margin-top: 10px; }
+  a.choice .go { display: block; font-size: 15px; font-weight: 700; color: var(--accent); margin-top: 24px; }
+
+  /* 大見出し */
+  h2.sec { font-size: 28px; line-height: 1.4; margin: 88px 0 0; padding-bottom: 20px; border-bottom: 1px solid var(--line); color: var(--ink); font-weight: 800; letter-spacing: .01em; }
+
+  /* 1つの質問 = 1行（左：質問、右：入力欄） */
+  .row {
+    display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 12px 56px;
+    padding: 40px 12px; border-bottom: 1px solid var(--line); align-items: start; border-radius: 0;
+  }
+  .row:focus-within { background: var(--surface); }
+  .row.wide { grid-template-columns: minmax(0, 1fr); }
+  .lab { font-weight: 700; line-height: 1.7; }
+  .lab .line { position: relative; padding-left: 32px; }
+  .lab .line.nonum { padding-left: 0; }
+  .lab .no { position: absolute; left: 0; top: 0; color: var(--accent); font-weight: 700; font-size: 14px; }
+  .lab .sub { font-weight: 400; font-size: 14px; color: var(--sub); margin: 8px 0 0 32px; line-height: 1.75; white-space: pre-line; }
+  .lab .sub.nonum { margin-left: 0; }
+  .lab .wants { font-weight: 400; font-size: 14px; color: var(--sub); margin: 8px 0 0 32px; line-height: 1.75; }
+  .lab .optchip { display: inline-block; margin-left: 10px; font-size: 12px; font-weight: 700; color: var(--sub); background: var(--field); border-radius: 999px; padding: 0 10px; vertical-align: 1px; }
+  .fld .hint { font-size: 13px; color: var(--sub); margin-top: 8px; }
+  .withunit { display: flex; align-items: center; gap: 10px; }
+  .unit { color: var(--sub); white-space: nowrap; }
+  .yen { color: var(--sub); font-size: 13px; margin-top: 4px; }
+  .yen:empty { display: none; }
+  .nonecheck { display: flex; gap: 10px; align-items: center; margin-top: 12px; cursor: pointer; font-size: 15px; }
+  .nonecheck input { width: 22px; height: 22px; accent-color: var(--accent); margin: 0; flex: none; }
+  .sumline { margin-top: 10px; font-size: 14px; color: var(--sub); min-height: 20px; }
+
+  /* 入力もれ・不備 */
+  .err { color: var(--error); font-weight: 700; font-size: 14px; margin-top: 8px; }
+  .row.bad textarea, .row.bad input[type=text], .row.bad select { border-color: var(--error); box-shadow: inset 0 0 0 1px var(--error); }
+  .warnbox { background: var(--accent-tint); border-radius: var(--radius); padding: 20px 24px; margin: 24px 0 0; text-align: left; font-size: 15px; }
+  .warnbox ul { margin: 8px 0 8px; padding-left: 20px; }
+
+  /* 入力欄 */
+  textarea, input[type=text], select {
+    width: 100%; font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--field);
+    border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 15px 18px;
+  }
+  textarea { min-height: 120px; resize: vertical; line-height: 1.75; }
+  textarea.short { min-height: 56px; resize: none; }
+  textarea:disabled { opacity: .5; }
+  input[type=text], select { height: 56px; }
+  ::placeholder { color: var(--ph); opacity: 1; }
+  textarea:focus, input[type=text]:focus, select:focus { outline: 3px solid var(--accent); outline-offset: 1px; background: #fff; border-color: var(--accent); }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  /* プルダウン */
+  select {
+    -webkit-appearance: none; appearance: none; cursor: pointer; padding-right: 52px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1.5l6 6 6-6' fill='none' stroke='%236e6e73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 22px center; background-size: 14px 9px;
+  }
+  select:invalid, select.empty { color: var(--ph); }
+
+  /* ボタン（丸い錠剤型） */
+  .btn {
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); background: var(--field); border: 0;
+    border-radius: 999px; padding: 8px 20px; cursor: pointer; min-height: 40px;
+  }
+  .btn:hover { background: var(--line); }
+  .btn.primary { background: var(--accent); color: #fff; font-size: 17px; font-weight: 700; padding: 18px 72px; letter-spacing: .06em; min-height: 60px; }
+  .btn.primary:hover { background: var(--accent-dark); }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  /* 表（角を丸くした枠の中に収める） */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line-strong); border-radius: 20px; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: 14px; }
+  th, td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+  th:last-child, td:last-child { border-right: 0; }
+  tbody tr:last-child td { border-bottom: 0; }
+  th { background: var(--field); font-size: 13px; padding: 14px 14px; }
+  th .hsub { display: block; font-weight: 400; font-size: 12px; color: var(--sub); line-height: 1.5; margin-top: 2px; }
+  td { padding: 10px; }
+  td.rowno { text-align: center; font-weight: 700; padding: 22px 4px 8px; color: var(--accent); }
+  td.rowlab { font-weight: 700; padding: 22px 14px 8px; }
+  th.num { text-align: center; }
+  td input[type=text], td textarea, td select { padding: 12px 14px; min-height: 52px; border-radius: 12px; }
+  td input[type=text], td select { height: 52px; }
+  td textarea { height: 52px; resize: none; overflow: hidden; display: block; }
+  td .withunit input { text-align: center; }
+
+  /* 記入例の行 */
+  tr.exrow td { background: var(--surface); color: var(--sub); padding: 14px; border-bottom-style: dashed; }
+  tr.exrow td.rowno { padding: 14px 4px; }
+  .chip { display: inline-block; font-size: 11px; font-weight: 700; color: var(--sub); background: var(--line); border-radius: 999px; padding: 2px 10px; letter-spacing: 0; white-space: nowrap; }
+
+  /* 写真の添付 */
+  .btn.addph { display: block; width: 100%; font-size: 16px; padding: 18px; border: 2px dashed var(--line-strong); border-radius: var(--radius); background: #fff; color: var(--accent); font-weight: 700; }
+  .btn.addph:hover:not(:disabled) { background: var(--accent-tint); border-color: var(--accent); }
+  .photomsg { margin-top: 10px; font-weight: 700; color: var(--accent); }
+  .photolist { margin-top: 16px; }
+  .photo { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; padding: 24px; border: 1px solid var(--line-strong); border-radius: 20px; margin-bottom: 16px; background: var(--surface); }
+  .photo .thumb { width: 180px; height: 135px; object-fit: cover; background: var(--field); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--sub); font-size: 13px; }
+  .photo .pf { margin-bottom: 14px; }
+  .photo .pf > label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 4px; }
+  .photo .pf > label .opt { font-weight: 400; color: var(--sub); margin-left: 6px; }
+  .photo .pinfo { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 12px; color: var(--sub); }
+  .photo input[type=text], .photo select { height: 50px; padding: 10px 16px; }
+  .photo select { padding-right: 48px; }
+  .opts { display: grid; gap: 10px; }
+  .optcard { display: flex; gap: 14px; align-items: center; padding: 16px 20px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); cursor: pointer; line-height: 1.6; }
+  .optcard:hover { background: #fff; }
+  .optcard.on { background: var(--accent-tint); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 700; }
+  .optcard input { width: 22px; height: 22px; flex: none; accent-color: var(--accent); margin: 0; }
+  .hpdetail { margin-top: 20px; }
+  .hpdetail .pf { margin-bottom: 16px; }
+  .hpdetail .pf > label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 4px; }
+  .hpdetail .pf > label .opt2 { font-weight: 400; color: var(--sub); margin-left: 6px; }
+  .consent { display: flex; gap: 14px; align-items: flex-start; margin-top: 8px; padding: 20px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); cursor: pointer; line-height: 1.7; }
+  .consent input { width: 22px; height: 22px; margin-top: 3px; flex: none; accent-color: var(--accent); }
+
+  .submit { margin-top: 72px; text-align: center; }
+  .msg { margin-top: 20px; font-weight: 700; color: var(--accent); min-height: 1.5em; }
+  .msg.bad { color: var(--error); }
+  .submit .lead { color: var(--sub); font-size: 14px; margin-top: 16px; }
+  .done { margin: 140px 0; text-align: center; }
+  .done h1 { font-size: clamp(28px, 4.6vw, 44px); font-weight: 800; color: var(--ink); margin: 0 0 16px; }
+  .done h1 .accent { color: var(--accent); }
+  .done p { color: var(--sub); }
+
+  @media (max-width: 760px) {
+    .wrap { padding: 0 18px 110px; }
+    .hero { padding-top: 56px; }
+    .hero p { text-align: left; }
+    .hero .lead { text-align: left; font-size: 15px; }
+    .bar { position: static; font-size: 12px; gap: 6px 12px; padding: 12px 0; }
+    .bar .left { gap: 4px 12px; }
+    .bar .btn { font-size: 12px; padding: 4px 14px; min-height: 36px; }
+    h2.sec { font-size: 23px; margin-top: 64px; }
+    .row { grid-template-columns: minmax(0, 1fr); padding: 28px 0; }
+    textarea, input[type=text], select { font-size: 16px; }
+    .tablewrap { border: 0; border-radius: 0; overflow: visible; }
+    table, thead, tbody, tr, th, td { display: block; }
+    thead { display: none; }
+    tr { border: 1px solid var(--line-strong); border-radius: 20px; margin-bottom: 14px; padding: 6px 0; background: #fff; }
+    td, tr.exrow td { border: 0; padding: 6px 14px; }
+    td.rowno { text-align: left; padding: 10px 14px 0; }
+    td.rowlab { padding: 10px 14px 0; }
+    td[data-label]::before { content: attr(data-label); display: block; font-size: 12px; color: var(--sub); font-weight: 400; padding: 0 0 4px; }
+    td.rowlab::before, td.rowno::before { display: none; }
+    td:empty { display: none; }
+    tr.exrow { background: var(--surface); }
+    .btn.primary { width: 100%; padding: 18px 0; }
+    .photo { grid-template-columns: minmax(0, 1fr); padding: 18px; }
+    .photo .thumb { width: 100%; max-width: 260px; height: 180px; }
+    .choices { margin-top: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p class="hero">読み込み中です…</p></div>
+
+<script>
+/* ================= 管理者用の設定（ここだけ編集してください） ================= */
+var CONFIG = {
+  // Apps ScriptのウェブアプリのURL（「…/exec」で終わるもの）を、引用符の中に貼り付けてください
+  ENDPOINT: '',
+  // 入力途中の内容を、お客様の端末に保持する時間（時間）。全問必須のため7日にしています
+  DRAFT_HOURS: 168
+};
+/* ============================================================================= */
+
+/* 以下は build.py が form_def.py から自動で作ります。直接は編集しないでください。 */
+var META = {"program":"新事業進出・ものづくり商業サービス補助金","title":"事業計画作成用 ヒアリングシート","note":"数字は概算で構いません。記入例は書き方の参考です。そのまま写さず、ご自身の状況に合わせてご記入ください。ご不明な点は、送信前に担当者までご連絡ください。","version":"2026-10-03"};
+var FRAMES = [{"key":"kakushin","name":"革新的新製品・サービス枠","desc":"技術的に革新的な、新製品・新サービスを開発する"},{"key":"shinjigyo","name":"新事業進出枠","desc":"既存事業とは異なる、新しい市場・高付加価値の事業に進出する"},{"key":"global","name":"グローバル枠","desc":"海外市場の開拓（輸出）に向けて、国内の体制を強化する"}];
+var FORMS = {"kakushin":{"name":"革新的新製品・サービス枠","basic":[{"id":"company","label":"法人名（正式名称）／代表者氏名","sub":"法人の方は法人名（正式名称）を、個人事業主の方は代表者の氏名をご記入ください。","placeholder":"例）株式会社サンプル　／　個人事業主の方は「山田 太郎」"},{"id":"contact","label":"ご担当者名","placeholder":"例）山田 太郎"}],"items":[{"id":"exec_story","type":"prose","category":"会社概要","question":"社長ご自身のことをお聞かせください。","sub":"人物像、これまでの経歴、大切にしている価値観やこだわりを、ストーリーとしてお書きください。","example":"【いつ・どんなきっかけ】で【創業／事業を承継】しました。仕事で大切にしているのは【考え方】です。","wants":["これまでの経歴","大切にしている価値観・こだわり","創業や承継のきっかけ"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"existing_biz","type":"table","category":"会社概要","question":"現在行っているすべての事業について、事業ごとに下の表にご記入ください。","sub":"直近3年程度の内容でご記入ください。小さな事業も含め、現在行っているものはすべて書いてください。書き漏れがあると、虚偽申請として不採択や採択取消の対象になります。","checks":[],"optional":false,"cols":[{"key":"name","label":"事業・製品・サービス名","type":"text"},{"key":"content","label":"展開している市場と具体的な内容","type":"textarea"},{"key":"share","label":"売上割合（%）","type":"number","unit":"%","min":0,"max":100},{"key":"trend","label":"直近3年の傾向（増減とその理由）","type":"textarea"}],"rowLabels":["1","2","3","4","5"],"requiredRows":1,"examples":[["○○の製造・販売","【主なお客様】に向けて【具体的な内容】を提供","60","横ばい（【理由】）"]]},{"id":"vision","type":"prose","category":"会社概要","question":"会社として目指す姿をお聞かせください。","sub":"補助事業の期間にとどまらず、長い目で見た姿をお書きください。","example":"【お客様や社会にとって、どんな存在でありたいか】を目指しています。そのために【行動指針】を大切にしています。","wants":["経営理念・存在意義","将来像","行動指針"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"strategy","type":"prose","category":"経営戦略","question":"3〜5年後のありたい姿と、その実現に向けた会社全体の方針をお聞かせください。","sub":"今回の事業だけでなく、既存事業も含めた会社全体の方針をお書きください。","example":"3〜5年後は【ありたい姿】になりたいです。既存事業は【方向性】、人・設備・資金は【方針】で進めます。","wants":["3〜5年後のありたい姿","既存事業の方向性","人・設備・お金の使い方の方針"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_s","type":"prose","category":"経営戦略","question":"自社の強みをお聞かせください。","sub":"人・設備・お金・情報・ノウハウの観点で、具体的にお書きください。","example":"【人・設備・ノウハウなど】の面で、【具体的な強み】があります。","wants":["強みの内容","それを裏づける事実（実績・年数・数字など）"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_w","type":"prose","category":"経営戦略","question":"自社の弱みをお聞かせください。","sub":"人・設備・お金・情報・ノウハウの観点で、具体的にお書きください。","example":"【人・設備・資金など】の面で、【具体的な弱み】があります。","wants":["弱みの内容","それによる困りごと"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_o","type":"prose","category":"経営戦略","question":"自社を取り巻く市場の追い風（機会）をお聞かせください。","sub":"","example":"【市場・お客様の動き】があり、【根拠（データや実例）】から、追い風だと考えています。","wants":["どの市場・お客様の動きか","そう考える根拠（データや実例）"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_t","type":"prose","category":"経営戦略","question":"自社を取り巻く市場の逆風（脅威）をお聞かせください。","sub":"","example":"【市場・競合・コストなどの動き】により、【どんな影響】が出そうです。","wants":["どんな動きか","自社への影響"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"issues","type":"prose","category":"経営戦略","question":"3〜5年後のありたい姿に近づくために、解決しなければならない課題をお聞かせください。","sub":"「売上が少ない」ではなく、「売上を上げるためには○○が必要」という形でお書きください。","example":"【ありたい姿】のためには、【○○（設備投資・人材・販路など）】が必要です。","wants":["解決すべき課題","その解決に必要なこと"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"why_project","type":"prose","category":"経営戦略","question":"上の課題を解決するために、なぜ今回の新製品・新サービスに取り組むのかをお聞かせください。","sub":"これまでの事業とのつながりも、あわせてお書きください。","example":"【課題】を解決するため、既存事業で培った【技術・顧客・設備・ノウハウ】を活かして、この事業に取り組みます。","wants":["なぜこの事業なのか","既存事業で活かせる技術・顧客・設備・ノウハウ","事業の方向転換になる場合は、その理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"biz_name","type":"text","category":"補助事業の内容","question":"新製品・新サービスの名称（案）をお聞かせください。","sub":"事業の内容が分かる名前をお書きください。採択された場合、この名称は公表されます。","example":"例）【事業の内容が分かる名称】","checks":[],"maxChars":30,"unitNote":"30字以内","optional":false},{"id":"biz_overview","type":"prose","category":"補助事業の内容","question":"新製品・新サービスの概要をお聞かせください。","sub":"","example":"【誰に】向けて、【何を】、【どのように】提供する事業です。","wants":["誰に","何を","どのように提供するか"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"product_name","type":"text","category":"補助事業の内容","question":"主な製品・サービスの名称をお聞かせください。","sub":"","example":"例）【製品・サービスの名称】","checks":[],"maxChars":50,"unitNote":"50字以内","optional":false},{"id":"product_content","type":"prose","category":"補助事業の内容","question":"主な製品・サービスの内容と、お客様に提供する価値をお聞かせください。","sub":"","example":"【製品・サービスの内容】を提供し、お客様の【困りごと】を【どう解決するか】を実現します。","wants":["製品・サービスの内容","お客様に提供する価値"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"target","type":"prose","category":"補助事業の内容","question":"どんなお客様を対象にするのか、なぜその方々に選ばれるのかをお聞かせください。","sub":"市場の大きさや成長の見込みも、分かる範囲でお書きください。","example":"【お客様の層】の【困りごと・ニーズ】に応えます。【選ばれる理由】があり、市場は【大きさ・成長の見込み】です。","wants":["対象のお客様（法人／個人、業種、規模など）","お客様の困りごと・ニーズ","選ばれる理由","市場の大きさ・成長の見込み（数字で）"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"readiness","type":"prose","category":"補助事業の内容","question":"事業化に向けた現在の準備状況と、お客様のニーズの裏づけをお聞かせください。","sub":"お客様からの問い合わせ・引き合い・要望のほか、試作、市場調査、取引先との話し合いなど、ここまでに進めたことをお書きください。","example":"【時期】に【進めたこと（試作・調査・打診など）】を行い、【問い合わせ・引き合いの件数や内容】があります。","wants":["ここまでに進めたこと","お客様からの問い合わせ・引き合い・要望（件数や内容）","これから必要な準備"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"competitors","type":"prose","category":"補助事業の内容","question":"主な競合と、その状況をお聞かせください。","sub":"競合がいない場合は、その理由をお書きください。","example":"競合は【社名や業態】で、【価格・強み・弱み】です。","wants":["競合の名前や業態","競合の価格・強み・弱み"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"differentiation","type":"prose","category":"補助事業の内容","question":"競合と比べて、新製品・新サービスが優位に立てる理由（差別化のポイント）をお聞かせください。","sub":"","example":"【競合との違い】があるため、【優位に立てる理由】があります。","wants":["競合との違い","優位に立てる理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"sales_strategy","type":"prose","category":"補助事業の内容","question":"どのように売っていくのかをお聞かせください。","sub":"価格、販路、販促の3つの観点でお書きください。","example":"価格は【単価の目安】、販路は【どこで・誰が売るか】、販促は【お客様への知らせ方】で進めます。","wants":["価格（単価の目安）","販路（どこで・誰が売るか）","販促（お客様への知らせ方）"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"sales_outlook","type":"prose","category":"補助事業の内容","question":"新製品・新サービスの売上の見通しをお聞かせください。","sub":"","example":"【時期】から売上が立ち、単価【○】円、月【○】件を見込みます。根拠は【理由】です。","wants":["売上が立ち始める時期","単価","販売数量・件数","その根拠"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"strength_use","type":"prose","category":"補助事業の内容","question":"新製品・新サービスで、特に活かせる自社の強みをお聞かせください。","sub":"","example":"【強み】を、【どの場面で】活かします。","wants":["活かせる強み","どの場面で活かすか"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"kk_innovation","type":"prose","category":"革新的新製品・サービス枠の質問","question":"開発する新製品・新サービスの革新性をお聞かせください。","sub":"","example":"【お客様に提供する新しい価値】を目的に、自社の【技術・ノウハウ】を活かして開発します。同業での普及状況は【状況】です。","wants":["開発する目的（お客様にどんな新しい価値を提供するか）","開発に活かす自社の技術・ノウハウ","同業の中小企業での普及状況"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"existing_sales","type":"table","category":"売上・人員","question":"既存事業の売上について、今期の見込みと来期の見込みを、下の表にご記入ください。","sub":"決算書は別途いただくため、見込みの金額と、前期と比べて大きく変わる場合の理由をお書きください。大きな変化がなければ、「大きな変化はない」とご記入ください。","checks":[],"optional":false,"cols":[{"key":"this","label":"今期の見込み（円）","type":"number","unit":"円","min":0},{"key":"next","label":"来期の見込み（円）","type":"number","unit":"円","min":0},{"key":"why","label":"前期と比べて大きく変わる場合の理由","type":"textarea"}],"rowLabels":["既存事業の売上（税抜）"],"requiredRows":1,"examples":[["300000000","306000000","大きな変化はない"]]},{"id":"project_sales","type":"number","category":"売上・人員","question":"新製品・新サービスで、事業計画期間の1年あたりに見込まれる売上（税抜）をお聞かせください。","sub":"事業計画期間の、平均的な1年分の金額で構いません。","example":"例）30000000","checks":[],"unit":"円","min":0,"optional":false},{"id":"exec_count","type":"number","category":"売上・人員","question":"役員の人数をお聞かせください。","sub":"","example":"例）3","checks":[],"unit":"人","min":0,"optional":false},{"id":"hr_plan","type":"prose","category":"売上・人員","question":"現時点で決まっている、今後の採用・退職・休職の予定をお聞かせください。","sub":"決まっている範囲で結構です。","example":"【いつ頃】に、【誰（職種）】が【採用・退職・休職】の予定です。","wants":["時期","対象（職種など）","人数"],"checks":[],"minChars":20,"none":"現時点で決まっている予定はない","short":false,"optional":false},{"id":"team_internal","type":"table","category":"実施体制","question":"新製品・新サービスに関わる社内の方について、下の表にご記入ください。","sub":"","checks":[],"optional":false,"cols":[{"key":"name","label":"氏名","type":"text"},{"key":"role","label":"役職・担当内容","type":"textarea"},{"key":"exp","label":"関連する経験・経歴","type":"textarea"}],"rowLabels":["1","2","3","4"],"requiredRows":1,"examples":[["A","【役職】。【この事業での担当内容】","【事業の遂行に関連する経験・経歴】"]]},{"id":"team_status","type":"prose","category":"実施体制","question":"社内の体制づくりの進み具合をお聞かせください。","sub":"足りない人材・能力がある場合は、その確保の見通しもお書きください。","example":"本事業には【人数】名が従事します。不足している【能力・人材】は、【採用・育成】で確保する見通しです。","wants":["従事する人数","足りない能力・人材","確保の見通し（採用・育成）"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"team_external","type":"table","category":"実施体制","question":"新製品・新サービスに関わる社外の会社（システム会社、機器販売会社、工事会社など）について、下の表にご記入ください。","sub":"決まっている会社があれば、ご記入ください。","checks":[],"optional":true,"cols":[{"key":"company","label":"会社名","type":"text"},{"key":"role","label":"役割","type":"textarea"},{"key":"detail","label":"内容","type":"textarea"}],"rowLabels":["1","2","3"],"requiredRows":0,"examples":[["株式会社○○","【役割（開発・設備導入など）】","【具体的な内容】"]]},{"id":"equipment","type":"prose","category":"実施体制","question":"導入を予定している設備・システムの概要と、それが必要な理由をお聞かせください。","sub":"","example":"【設備・システムの名称】を導入します。【今の困りごと】を解決するために必要です。導入の規模は【想定する生産量・利用量】に基づきます。","wants":["導入する設備・システムの名称や種類","必要な理由（今の何が困っているか）","導入の規模の根拠（想定する生産量・利用量）"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"layoff","type":"select","category":"実施体制","question":"既存事業の縮小・廃止や省人化により、従業員の解雇を伴いますか。","sub":"定年退職や自己都合退職は含みません。","checks":[],"options":["なし","あり"],"optional":false},{"id":"layoff_support","type":"prose","category":"実施体制","question":"再就職の支援など、従業員への配慮をお聞かせください。","sub":"","example":"【配慮の内容】を行います。","wants":["配慮の内容"],"checks":[],"minChars":5,"showIf":{"id":"layoff","in":["あり"]},"short":false,"optional":false},{"id":"permit","type":"select","category":"実施体制","question":"新製品・新サービスの実施に、許認可や資格の取得は必要ですか。","sub":"","checks":[],"options":["不要","必要"],"optional":false},{"id":"permit_detail","type":"prose","category":"実施体制","question":"取得が必要な許認可・資格と、取得の時期の目途をお聞かせください。","sub":"","example":"【許認可・資格】が必要で、【時期】までに取得する予定です。","wants":["許認可・資格の名称","取得の時期の目途"],"checks":[],"minChars":5,"showIf":{"id":"permit","in":["必要"]},"short":false,"optional":false},{"id":"schedule_years","type":"select","category":"実施体制","question":"補助事業が終わってからの計画（事業計画期間）は、何年間にしますか。","sub":"3〜5年間から選べます。選んだ年数に合わせて、次の表の行が変わります。","checks":[],"options":["3年間","4年間","5年間"],"optional":false},{"id":"schedule","type":"table","category":"実施体制","question":"事業計画期間の、年度ごとの目標と取り組みを、下の表にご記入ください。","sub":"補助事業が終わった翌年度を、1年度目としてください。","checks":[],"optional":false,"cols":[{"key":"goal","label":"その年の目標・節目","type":"textarea"},{"key":"work","label":"その年の主な取り組み","type":"textarea"},{"key":"owner","label":"主な担当者","type":"text"}],"rowLabels":["1年度目","2年度目","3年度目","4年度目","5年度目"],"requiredRows":5,"rowShowIf":[null,null,null,{"id":"schedule_years","in":["4年間","5年間"]},{"id":"schedule_years","in":["5年間"]}],"examples":[["【その年の目標】","【その年の主な取り組み】","【担当者】"]]},{"id":"challenges","type":"prose","category":"実施体制","question":"事業を進めるうえで想定される課題と、その対応策をお聞かせください。","sub":"","example":"【想定される課題】があります。対応策は【対応策】です。","wants":["想定される課題（技術・販売・人材・資金など）","課題ごとの対応策"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"fund_unit","type":"select","category":"資金","question":"資金の調達方法を、金額と割合のどちらで回答しますか。","sub":"下の2つの表を、ここで選んだ単位で統一してご記入ください。","checks":[],"options":["金額（円）で回答する","割合（%）で回答する"],"optional":false},{"id":"fund_total","type":"table","category":"資金","question":"新製品・新サービスに必要な資金を、どのように用意しますか。","sub":"補助金を除いた、自社で用意する分についてご記入ください。割合で回答する場合は、その合計を100%としてください。金額が確定していない場合は、見込みで構いません。0の場合は、「0」とご記入ください。","checks":[],"optional":false,"cols":[{"key":"value","label":"金額または割合","type":"number","min":0,"unitBy":{"id":"fund_unit","map":{"金額（円）で回答する":"円","割合（%）で回答する":"%"}}},{"key":"source","label":"調達先（0の場合は空欄で可）","type":"text","optionalIfZero":true}],"rowLabels":["自己資金","借入金","その他"],"requiredRows":3,"examples":[["【金額または割合】","【手元の預金／○○銀行／リースなど】"]],"sumCheck":{"unitId":"fund_unit","percentOption":"割合（%）で回答する","col":0}},{"id":"fund_bridge","type":"table","category":"資金","question":"補助金が入るまでの間、立て替える資金をどのように用意しますか。","sub":"補助金は後払いのため、先に自社で全額を支払う必要があります。上の表と同じ単位でご記入ください。割合で回答する場合は、その合計を100%としてください。","checks":[],"optional":false,"cols":[{"key":"value","label":"金額または割合","type":"number","min":0,"unitBy":{"id":"fund_unit","map":{"金額（円）で回答する":"円","割合（%）で回答する":"%"}}},{"key":"source","label":"調達先（0の場合は空欄で可）","type":"text","optionalIfZero":true}],"rowLabels":["自己資金","借入金","その他"],"requiredRows":3,"examples":[["【金額または割合】","【手元の預金／○○銀行／リースなど】"]],"sumCheck":{"unitId":"fund_unit","percentOption":"割合（%）で回答する","col":0}},{"id":"public_effect","type":"prose","category":"公的補助の必要性・政策面","question":"新製品・新サービスが、地域や取引先、雇用などに与える良い影響をお聞かせください。","sub":"取引先への波及、雇用、地域への貢献、デジタル技術や新しい仕組みを使う点など、当てはまるものをお書きください。","example":"【取引先・地域・雇用】に【良い影響】があります。新たに【人数】名程度の雇用を見込みます。","wants":["取引先（仕入先・販売先）への波及","新たに生まれる雇用（人数の目安）","地域や社会への貢献","デジタル技術や新しい仕組みを使う点"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"without_subsidy","type":"prose","category":"公的補助の必要性・政策面","question":"もし補助金がなかった場合、この事業はどうなりますか。","sub":"","example":"補助金がない場合は【縮小・延期・断念】になります。【自社の資金だけでは難しい理由】があるためです。","wants":["補助金がない場合の対応（縮小・延期・断念など）","自社の資金だけでは難しい理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"cluster","type":"select","category":"公的補助の必要性・政策面","question":"新製品・新サービスの内容は、国の「戦略17分野」のどれかに当てはまりますか。","sub":"当てはまるものがなければ、「該当しない」をお選びください。","checks":[],"options":["①AI・半導体","②デジタル・サイバーセキュリティ","③情報通信","④量子","⑤防衛産業","⑥航空・宇宙","⑦海洋","⑧造船","⑨マテリアル（重要鉱物・部素材）","⑩合成生物学・バイオ","⑪創薬・先端医療","⑫資源・エネルギー安全保障・GX","⑬フュージョンエネルギー","⑭フードテック","⑮防災・国土強靭化","⑯港湾ロジスティクス","⑰コンテンツ","該当しない"],"optional":false},{"id":"cluster_reason","type":"prose","category":"公的補助の必要性・政策面","question":"その分野に当てはまる理由をお聞かせください。","sub":"","example":"【分野】に当てはまる理由は【理由】です。","wants":["当てはまる理由"],"checks":[],"minChars":10,"showIf":{"id":"cluster","notIn":["該当しない"]},"short":false,"optional":false}]},"shinjigyo":{"name":"新事業進出枠","basic":[{"id":"company","label":"法人名（正式名称）／代表者氏名","sub":"法人の方は法人名（正式名称）を、個人事業主の方は代表者の氏名をご記入ください。","placeholder":"例）株式会社サンプル　／　個人事業主の方は「山田 太郎」"},{"id":"contact","label":"ご担当者名","placeholder":"例）山田 太郎"}],"items":[{"id":"exec_story","type":"prose","category":"会社概要","question":"社長ご自身のことをお聞かせください。","sub":"人物像、これまでの経歴、大切にしている価値観やこだわりを、ストーリーとしてお書きください。","example":"【いつ・どんなきっかけ】で【創業／事業を承継】しました。仕事で大切にしているのは【考え方】です。","wants":["これまでの経歴","大切にしている価値観・こだわり","創業や承継のきっかけ"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"existing_biz","type":"table","category":"会社概要","question":"現在行っているすべての事業について、事業ごとに下の表にご記入ください。","sub":"直近3年程度の内容でご記入ください。小さな事業も含め、現在行っているものはすべて書いてください。書き漏れがあると、虚偽申請として不採択や採択取消の対象になります。","checks":[],"optional":false,"cols":[{"key":"name","label":"事業・製品・サービス名","type":"text"},{"key":"content","label":"展開している市場と具体的な内容","type":"textarea"},{"key":"share","label":"売上割合（%）","type":"number","unit":"%","min":0,"max":100},{"key":"trend","label":"直近3年の傾向（増減とその理由）","type":"textarea"}],"rowLabels":["1","2","3","4","5"],"requiredRows":1,"examples":[["○○の製造・販売","【主なお客様】に向けて【具体的な内容】を提供","60","横ばい（【理由】）"]]},{"id":"vision","type":"prose","category":"会社概要","question":"会社として目指す姿をお聞かせください。","sub":"補助事業の期間にとどまらず、長い目で見た姿をお書きください。","example":"【お客様や社会にとって、どんな存在でありたいか】を目指しています。そのために【行動指針】を大切にしています。","wants":["経営理念・存在意義","将来像","行動指針"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"strategy","type":"prose","category":"経営戦略","question":"3〜5年後のありたい姿と、その実現に向けた会社全体の方針をお聞かせください。","sub":"今回の事業だけでなく、既存事業も含めた会社全体の方針をお書きください。","example":"3〜5年後は【ありたい姿】になりたいです。既存事業は【方向性】、人・設備・資金は【方針】で進めます。","wants":["3〜5年後のありたい姿","既存事業の方向性","人・設備・お金の使い方の方針"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_s","type":"prose","category":"経営戦略","question":"自社の強みをお聞かせください。","sub":"人・設備・お金・情報・ノウハウの観点で、具体的にお書きください。","example":"【人・設備・ノウハウなど】の面で、【具体的な強み】があります。","wants":["強みの内容","それを裏づける事実（実績・年数・数字など）"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_w","type":"prose","category":"経営戦略","question":"自社の弱みをお聞かせください。","sub":"人・設備・お金・情報・ノウハウの観点で、具体的にお書きください。","example":"【人・設備・資金など】の面で、【具体的な弱み】があります。","wants":["弱みの内容","それによる困りごと"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_o","type":"prose","category":"経営戦略","question":"自社を取り巻く市場の追い風（機会）をお聞かせください。","sub":"","example":"【市場・お客様の動き】があり、【根拠（データや実例）】から、追い風だと考えています。","wants":["どの市場・お客様の動きか","そう考える根拠（データや実例）"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_t","type":"prose","category":"経営戦略","question":"自社を取り巻く市場の逆風（脅威）をお聞かせください。","sub":"","example":"【市場・競合・コストなどの動き】により、【どんな影響】が出そうです。","wants":["どんな動きか","自社への影響"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"issues","type":"prose","category":"経営戦略","question":"3〜5年後のありたい姿に近づくために、解決しなければならない課題をお聞かせください。","sub":"「売上が少ない」ではなく、「売上を上げるためには○○が必要」という形でお書きください。","example":"【ありたい姿】のためには、【○○（設備投資・人材・販路など）】が必要です。","wants":["解決すべき課題","その解決に必要なこと"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"why_project","type":"prose","category":"経営戦略","question":"上の課題を解決するために、なぜ今回の新規事業に取り組むのかをお聞かせください。","sub":"これまでの事業とのつながりも、あわせてお書きください。","example":"【課題】を解決するため、既存事業で培った【技術・顧客・設備・ノウハウ】を活かして、この事業に取り組みます。","wants":["なぜこの事業なのか","既存事業で活かせる技術・顧客・設備・ノウハウ","事業の方向転換になる場合は、その理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"biz_name","type":"text","category":"補助事業の内容","question":"新規事業の名称（案）をお聞かせください。","sub":"事業の内容が分かる名前をお書きください。採択された場合、この名称は公表されます。","example":"例）【事業の内容が分かる名称】","checks":[],"maxChars":30,"unitNote":"30字以内","optional":false},{"id":"biz_overview","type":"prose","category":"補助事業の内容","question":"新規事業の概要をお聞かせください。","sub":"","example":"【誰に】向けて、【何を】、【どのように】提供する事業です。","wants":["誰に","何を","どのように提供するか"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"product_name","type":"text","category":"補助事業の内容","question":"主な製品・サービスの名称をお聞かせください。","sub":"","example":"例）【製品・サービスの名称】","checks":[],"maxChars":50,"unitNote":"50字以内","optional":false},{"id":"product_content","type":"prose","category":"補助事業の内容","question":"主な製品・サービスの内容と、お客様に提供する価値をお聞かせください。","sub":"","example":"【製品・サービスの内容】を提供し、お客様の【困りごと】を【どう解決するか】を実現します。","wants":["製品・サービスの内容","お客様に提供する価値"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"target","type":"prose","category":"補助事業の内容","question":"どんなお客様を対象にするのか、なぜその方々に選ばれるのかをお聞かせください。","sub":"市場の大きさや成長の見込みも、分かる範囲でお書きください。","example":"【お客様の層】の【困りごと・ニーズ】に応えます。【選ばれる理由】があり、市場は【大きさ・成長の見込み】です。","wants":["対象のお客様（法人／個人、業種、規模など）","お客様の困りごと・ニーズ","選ばれる理由","市場の大きさ・成長の見込み（数字で）"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"readiness","type":"prose","category":"補助事業の内容","question":"事業化に向けた現在の準備状況と、お客様のニーズの裏づけをお聞かせください。","sub":"お客様からの問い合わせ・引き合い・要望のほか、試作、市場調査、取引先との話し合いなど、ここまでに進めたことをお書きください。","example":"【時期】に【進めたこと（試作・調査・打診など）】を行い、【問い合わせ・引き合いの件数や内容】があります。","wants":["ここまでに進めたこと","お客様からの問い合わせ・引き合い・要望（件数や内容）","これから必要な準備"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"competitors","type":"prose","category":"補助事業の内容","question":"主な競合と、その状況をお聞かせください。","sub":"競合がいない場合は、その理由をお書きください。","example":"競合は【社名や業態】で、【価格・強み・弱み】です。","wants":["競合の名前や業態","競合の価格・強み・弱み"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"differentiation","type":"prose","category":"補助事業の内容","question":"競合と比べて、新規事業が優位に立てる理由（差別化のポイント）をお聞かせください。","sub":"","example":"【競合との違い】があるため、【優位に立てる理由】があります。","wants":["競合との違い","優位に立てる理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"sales_strategy","type":"prose","category":"補助事業の内容","question":"どのように売っていくのかをお聞かせください。","sub":"価格、販路、販促の3つの観点でお書きください。","example":"価格は【単価の目安】、販路は【どこで・誰が売るか】、販促は【お客様への知らせ方】で進めます。","wants":["価格（単価の目安）","販路（どこで・誰が売るか）","販促（お客様への知らせ方）"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"sales_outlook","type":"prose","category":"補助事業の内容","question":"新規事業の売上の見通しをお聞かせください。","sub":"","example":"【時期】から売上が立ち、単価【○】円、月【○】件を見込みます。根拠は【理由】です。","wants":["売上が立ち始める時期","単価","販売数量・件数","その根拠"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"strength_use","type":"prose","category":"補助事業の内容","question":"新規事業で、特に活かせる自社の強みをお聞かせください。","sub":"","example":"【強み】を、【どの場面で】活かします。","wants":["活かせる強み","どの場面で活かすか"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"nm_product_new","type":"prose","category":"新事業進出枠の質問","question":"今回の事業で新たに提供する製品・サービスは、現在の製品・サービスと何が違いますか。","sub":"ここでの「新しさ」は、世の中で初めてという意味ではなく、自社にとって初めてという意味です。","example":"新たに提供するのは【製品・サービス】です。現在の【製品・サービス】との違いは【違い】です。","wants":["新たに提供する製品・サービス","現在の製品・サービスとの違い"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"nm_market_new","type":"prose","category":"新事業進出枠の質問","question":"今回の事業が対象とするお客様（市場）は、現在のお客様とどう違いますか。","sub":"","example":"新たに対象とするのは【お客様の層】です。現在のお客様との違いは【違い】です。","wants":["新たに対象とするお客様（法人／個人、業種、行動特性など）","現在のお客様との違い"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"nm_choice","type":"select","category":"新事業進出枠の質問","question":"今回の事業は、次のどちらの理由で「新しい事業」と言えますか。","sub":"当てはまるほうを1つお選びください。選んだ内容に応じて、次の質問が変わります。","checks":[],"options":["新市場性（世の中での普及度・認知度が低い分野）","高付加価値性（同じ分野の相場より、高い付加価値・価格を実現する）"],"optional":false},{"id":"nm_genre","type":"text","category":"新事業進出枠の質問","question":"今回の事業のジャンル・分野を、ひと言で書いてください。","sub":"性能・サイズ・素材・価格帯・地域・業態・顧客層・効果は含めず、分野の名前だけを書きます。\n良い例：「大豆食品」「医療機器部品」「焼肉店」　悪い例：「栄養価の高い大豆食品」「東京都港区の高級焼肉店」","example":"例）【分野の名前だけ】","checks":[],"maxChars":50,"unitNote":"50字以内","optional":false},{"id":"nm_unfamiliar","type":"prose","category":"新事業進出枠の質問","question":"その分野が、世の中でまだ一般的に普及・認知されていないと考える根拠をお聞かせください。","sub":"数字や統計など、客観的なデータがあれば出典もあわせてお書きください。","example":"【分野名】は、【数字や統計（出典）】から、まだ一般的に普及・認知されていないと言えます。","wants":["普及度・認知度が低いことが分かる数字や統計","出典"],"checks":["num"],"minChars":20,"showIf":{"id":"nm_choice","in":["新市場性（世の中での普及度・認知度が低い分野）"]},"short":false,"optional":false},{"id":"nm_market_price","type":"prose","category":"新事業進出枠の質問","question":"その分野での、一般的な付加価値や相場価格をお聞かせください。","sub":"調べた方法や出典もあわせてお書きください。","example":"【分野名】の一般的な価格帯は【相場】です。【調べた方法・出典】に基づきます。","wants":["同じ分野の一般的な価格帯・相場","調べた方法や出典"],"checks":["num"],"minChars":20,"showIf":{"id":"nm_choice","in":["高付加価値性（同じ分野の相場より、高い付加価値・価格を実現する）"]},"short":false,"optional":false},{"id":"nm_value_up","type":"prose","category":"新事業進出枠の質問","question":"相場と比べて、どのように高い付加価値・価格を実現するのかをお聞かせください。","sub":"その源泉となる、自社の価値や強みもあわせてお書きください。","example":"相場より【どれだけ高い】価格・付加価値を、【自社の強み】によって実現します。","wants":["相場との差（どれだけ高いか）","高い価格・付加価値の源泉となる自社の強み"],"checks":[],"minChars":20,"showIf":{"id":"nm_choice","in":["高付加価値性（同じ分野の相場より、高い付加価値・価格を実現する）"]},"short":false,"optional":false},{"id":"existing_sales","type":"table","category":"売上・人員","question":"既存事業の売上について、今期の見込みと来期の見込みを、下の表にご記入ください。","sub":"決算書は別途いただくため、見込みの金額と、前期と比べて大きく変わる場合の理由をお書きください。大きな変化がなければ、「大きな変化はない」とご記入ください。","checks":[],"optional":false,"cols":[{"key":"this","label":"今期の見込み（円）","type":"number","unit":"円","min":0},{"key":"next","label":"来期の見込み（円）","type":"number","unit":"円","min":0},{"key":"why","label":"前期と比べて大きく変わる場合の理由","type":"textarea"}],"rowLabels":["既存事業の売上（税抜）"],"requiredRows":1,"examples":[["300000000","306000000","大きな変化はない"]]},{"id":"project_sales","type":"number","category":"売上・人員","question":"新規事業で、事業計画期間の1年あたりに見込まれる売上（税抜）をお聞かせください。","sub":"事業計画期間の、平均的な1年分の金額で構いません。","example":"例）30000000","checks":[],"unit":"円","min":0,"optional":false},{"id":"exec_count","type":"number","category":"売上・人員","question":"役員の人数をお聞かせください。","sub":"","example":"例）3","checks":[],"unit":"人","min":0,"optional":false},{"id":"hr_plan","type":"prose","category":"売上・人員","question":"現時点で決まっている、今後の採用・退職・休職の予定をお聞かせください。","sub":"決まっている範囲で結構です。","example":"【いつ頃】に、【誰（職種）】が【採用・退職・休職】の予定です。","wants":["時期","対象（職種など）","人数"],"checks":[],"minChars":20,"none":"現時点で決まっている予定はない","short":false,"optional":false},{"id":"team_internal","type":"table","category":"実施体制","question":"新規事業に関わる社内の方について、下の表にご記入ください。","sub":"","checks":[],"optional":false,"cols":[{"key":"name","label":"氏名","type":"text"},{"key":"role","label":"役職・担当内容","type":"textarea"},{"key":"exp","label":"関連する経験・経歴","type":"textarea"}],"rowLabels":["1","2","3","4"],"requiredRows":1,"examples":[["A","【役職】。【この事業での担当内容】","【事業の遂行に関連する経験・経歴】"]]},{"id":"team_status","type":"prose","category":"実施体制","question":"社内の体制づくりの進み具合をお聞かせください。","sub":"足りない人材・能力がある場合は、その確保の見通しもお書きください。","example":"本事業には【人数】名が従事します。不足している【能力・人材】は、【採用・育成】で確保する見通しです。","wants":["従事する人数","足りない能力・人材","確保の見通し（採用・育成）"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"team_external","type":"table","category":"実施体制","question":"新規事業に関わる社外の会社（システム会社、機器販売会社、工事会社など）について、下の表にご記入ください。","sub":"決まっている会社があれば、ご記入ください。","checks":[],"optional":true,"cols":[{"key":"company","label":"会社名","type":"text"},{"key":"role","label":"役割","type":"textarea"},{"key":"detail","label":"内容","type":"textarea"}],"rowLabels":["1","2","3"],"requiredRows":0,"examples":[["株式会社○○","【役割（開発・設備導入など）】","【具体的な内容】"]]},{"id":"equipment","type":"prose","category":"実施体制","question":"導入を予定している設備・システムの概要と、それが必要な理由をお聞かせください。","sub":"","example":"【設備・システムの名称】を導入します。【今の困りごと】を解決するために必要です。導入の規模は【想定する生産量・利用量】に基づきます。","wants":["導入する設備・システムの名称や種類","必要な理由（今の何が困っているか）","導入の規模の根拠（想定する生産量・利用量）"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"layoff","type":"select","category":"実施体制","question":"既存事業の縮小・廃止や省人化により、従業員の解雇を伴いますか。","sub":"定年退職や自己都合退職は含みません。","checks":[],"options":["なし","あり"],"optional":false},{"id":"layoff_support","type":"prose","category":"実施体制","question":"再就職の支援など、従業員への配慮をお聞かせください。","sub":"","example":"【配慮の内容】を行います。","wants":["配慮の内容"],"checks":[],"minChars":5,"showIf":{"id":"layoff","in":["あり"]},"short":false,"optional":false},{"id":"permit","type":"select","category":"実施体制","question":"新規事業の実施に、許認可や資格の取得は必要ですか。","sub":"","checks":[],"options":["不要","必要"],"optional":false},{"id":"permit_detail","type":"prose","category":"実施体制","question":"取得が必要な許認可・資格と、取得の時期の目途をお聞かせください。","sub":"","example":"【許認可・資格】が必要で、【時期】までに取得する予定です。","wants":["許認可・資格の名称","取得の時期の目途"],"checks":[],"minChars":5,"showIf":{"id":"permit","in":["必要"]},"short":false,"optional":false},{"id":"schedule_years","type":"select","category":"実施体制","question":"補助事業が終わってからの計画（事業計画期間）は、何年間にしますか。","sub":"3〜5年間から選べます。選んだ年数に合わせて、次の表の行が変わります。","checks":[],"options":["3年間","4年間","5年間"],"optional":false},{"id":"schedule","type":"table","category":"実施体制","question":"事業計画期間の、年度ごとの目標と取り組みを、下の表にご記入ください。","sub":"補助事業が終わった翌年度を、1年度目としてください。","checks":[],"optional":false,"cols":[{"key":"goal","label":"その年の目標・節目","type":"textarea"},{"key":"work","label":"その年の主な取り組み","type":"textarea"},{"key":"owner","label":"主な担当者","type":"text"}],"rowLabels":["1年度目","2年度目","3年度目","4年度目","5年度目"],"requiredRows":5,"rowShowIf":[null,null,null,{"id":"schedule_years","in":["4年間","5年間"]},{"id":"schedule_years","in":["5年間"]}],"examples":[["【その年の目標】","【その年の主な取り組み】","【担当者】"]]},{"id":"challenges","type":"prose","category":"実施体制","question":"事業を進めるうえで想定される課題と、その対応策をお聞かせください。","sub":"","example":"【想定される課題】があります。対応策は【対応策】です。","wants":["想定される課題（技術・販売・人材・資金など）","課題ごとの対応策"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"fund_unit","type":"select","category":"資金","question":"資金の調達方法を、金額と割合のどちらで回答しますか。","sub":"下の2つの表を、ここで選んだ単位で統一してご記入ください。","checks":[],"options":["金額（円）で回答する","割合（%）で回答する"],"optional":false},{"id":"fund_total","type":"table","category":"資金","question":"新規事業に必要な資金を、どのように用意しますか。","sub":"補助金を除いた、自社で用意する分についてご記入ください。割合で回答する場合は、その合計を100%としてください。金額が確定していない場合は、見込みで構いません。0の場合は、「0」とご記入ください。","checks":[],"optional":false,"cols":[{"key":"value","label":"金額または割合","type":"number","min":0,"unitBy":{"id":"fund_unit","map":{"金額（円）で回答する":"円","割合（%）で回答する":"%"}}},{"key":"source","label":"調達先（0の場合は空欄で可）","type":"text","optionalIfZero":true}],"rowLabels":["自己資金","借入金","その他"],"requiredRows":3,"examples":[["【金額または割合】","【手元の預金／○○銀行／リースなど】"]],"sumCheck":{"unitId":"fund_unit","percentOption":"割合（%）で回答する","col":0}},{"id":"fund_bridge","type":"table","category":"資金","question":"補助金が入るまでの間、立て替える資金をどのように用意しますか。","sub":"補助金は後払いのため、先に自社で全額を支払う必要があります。上の表と同じ単位でご記入ください。割合で回答する場合は、その合計を100%としてください。","checks":[],"optional":false,"cols":[{"key":"value","label":"金額または割合","type":"number","min":0,"unitBy":{"id":"fund_unit","map":{"金額（円）で回答する":"円","割合（%）で回答する":"%"}}},{"key":"source","label":"調達先（0の場合は空欄で可）","type":"text","optionalIfZero":true}],"rowLabels":["自己資金","借入金","その他"],"requiredRows":3,"examples":[["【金額または割合】","【手元の預金／○○銀行／リースなど】"]],"sumCheck":{"unitId":"fund_unit","percentOption":"割合（%）で回答する","col":0}},{"id":"public_effect","type":"prose","category":"公的補助の必要性・政策面","question":"新規事業が、地域や取引先、雇用などに与える良い影響をお聞かせください。","sub":"取引先への波及、雇用、地域への貢献、デジタル技術や新しい仕組みを使う点など、当てはまるものをお書きください。","example":"【取引先・地域・雇用】に【良い影響】があります。新たに【人数】名程度の雇用を見込みます。","wants":["取引先（仕入先・販売先）への波及","新たに生まれる雇用（人数の目安）","地域や社会への貢献","デジタル技術や新しい仕組みを使う点"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"without_subsidy","type":"prose","category":"公的補助の必要性・政策面","question":"もし補助金がなかった場合、この事業はどうなりますか。","sub":"","example":"補助金がない場合は【縮小・延期・断念】になります。【自社の資金だけでは難しい理由】があるためです。","wants":["補助金がない場合の対応（縮小・延期・断念など）","自社の資金だけでは難しい理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"cluster","type":"select","category":"公的補助の必要性・政策面","question":"新規事業の内容は、国の「戦略17分野」のどれかに当てはまりますか。","sub":"当てはまるものがなければ、「該当しない」をお選びください。","checks":[],"options":["①AI・半導体","②デジタル・サイバーセキュリティ","③情報通信","④量子","⑤防衛産業","⑥航空・宇宙","⑦海洋","⑧造船","⑨マテリアル（重要鉱物・部素材）","⑩合成生物学・バイオ","⑪創薬・先端医療","⑫資源・エネルギー安全保障・GX","⑬フュージョンエネルギー","⑭フードテック","⑮防災・国土強靭化","⑯港湾ロジスティクス","⑰コンテンツ","該当しない"],"optional":false},{"id":"cluster_reason","type":"prose","category":"公的補助の必要性・政策面","question":"その分野に当てはまる理由をお聞かせください。","sub":"","example":"【分野】に当てはまる理由は【理由】です。","wants":["当てはまる理由"],"checks":[],"minChars":10,"showIf":{"id":"cluster","notIn":["該当しない"]},"short":false,"optional":false}]},"global":{"name":"グローバル枠","basic":[{"id":"company","label":"法人名（正式名称）／代表者氏名","sub":"法人の方は法人名（正式名称）を、個人事業主の方は代表者の氏名をご記入ください。","placeholder":"例）株式会社サンプル　／　個人事業主の方は「山田 太郎」"},{"id":"contact","label":"ご担当者名","placeholder":"例）山田 太郎"}],"items":[{"id":"exec_story","type":"prose","category":"会社概要","question":"社長ご自身のことをお聞かせください。","sub":"人物像、これまでの経歴、大切にしている価値観やこだわりを、ストーリーとしてお書きください。","example":"【いつ・どんなきっかけ】で【創業／事業を承継】しました。仕事で大切にしているのは【考え方】です。","wants":["これまでの経歴","大切にしている価値観・こだわり","創業や承継のきっかけ"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"existing_biz","type":"table","category":"会社概要","question":"現在行っているすべての事業について、事業ごとに下の表にご記入ください。","sub":"直近3年程度の内容でご記入ください。小さな事業も含め、現在行っているものはすべて書いてください。書き漏れがあると、虚偽申請として不採択や採択取消の対象になります。","checks":[],"optional":false,"cols":[{"key":"name","label":"事業・製品・サービス名","type":"text"},{"key":"content","label":"展開している市場と具体的な内容","type":"textarea"},{"key":"share","label":"売上割合（%）","type":"number","unit":"%","min":0,"max":100},{"key":"trend","label":"直近3年の傾向（増減とその理由）","type":"textarea"}],"rowLabels":["1","2","3","4","5"],"requiredRows":1,"examples":[["○○の製造・販売","【主なお客様】に向けて【具体的な内容】を提供","60","横ばい（【理由】）"]]},{"id":"vision","type":"prose","category":"会社概要","question":"会社として目指す姿をお聞かせください。","sub":"補助事業の期間にとどまらず、長い目で見た姿をお書きください。","example":"【お客様や社会にとって、どんな存在でありたいか】を目指しています。そのために【行動指針】を大切にしています。","wants":["経営理念・存在意義","将来像","行動指針"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"strategy","type":"prose","category":"経営戦略","question":"3〜5年後のありたい姿と、その実現に向けた会社全体の方針をお聞かせください。","sub":"今回の事業だけでなく、既存事業も含めた会社全体の方針をお書きください。","example":"3〜5年後は【ありたい姿】になりたいです。既存事業は【方向性】、人・設備・資金は【方針】で進めます。","wants":["3〜5年後のありたい姿","既存事業の方向性","人・設備・お金の使い方の方針"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_s","type":"prose","category":"経営戦略","question":"自社の強みをお聞かせください。","sub":"人・設備・お金・情報・ノウハウの観点で、具体的にお書きください。","example":"【人・設備・ノウハウなど】の面で、【具体的な強み】があります。","wants":["強みの内容","それを裏づける事実（実績・年数・数字など）"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_w","type":"prose","category":"経営戦略","question":"自社の弱みをお聞かせください。","sub":"人・設備・お金・情報・ノウハウの観点で、具体的にお書きください。","example":"【人・設備・資金など】の面で、【具体的な弱み】があります。","wants":["弱みの内容","それによる困りごと"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_o","type":"prose","category":"経営戦略","question":"自社を取り巻く市場の追い風（機会）をお聞かせください。","sub":"","example":"【市場・お客様の動き】があり、【根拠（データや実例）】から、追い風だと考えています。","wants":["どの市場・お客様の動きか","そう考える根拠（データや実例）"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"swot_t","type":"prose","category":"経営戦略","question":"自社を取り巻く市場の逆風（脅威）をお聞かせください。","sub":"","example":"【市場・競合・コストなどの動き】により、【どんな影響】が出そうです。","wants":["どんな動きか","自社への影響"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"issues","type":"prose","category":"経営戦略","question":"3〜5年後のありたい姿に近づくために、解決しなければならない課題をお聞かせください。","sub":"「売上が少ない」ではなく、「売上を上げるためには○○が必要」という形でお書きください。","example":"【ありたい姿】のためには、【○○（設備投資・人材・販路など）】が必要です。","wants":["解決すべき課題","その解決に必要なこと"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"why_project","type":"prose","category":"経営戦略","question":"上の課題を解決するために、なぜ今回の新規事業に取り組むのかをお聞かせください。","sub":"これまでの事業とのつながりも、あわせてお書きください。","example":"【課題】を解決するため、既存事業で培った【技術・顧客・設備・ノウハウ】を活かして、この事業に取り組みます。","wants":["なぜこの事業なのか","既存事業で活かせる技術・顧客・設備・ノウハウ","事業の方向転換になる場合は、その理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"biz_name","type":"text","category":"補助事業の内容","question":"新規事業の名称（案）をお聞かせください。","sub":"事業の内容が分かる名前をお書きください。採択された場合、この名称は公表されます。","example":"例）【事業の内容が分かる名称】","checks":[],"maxChars":30,"unitNote":"30字以内","optional":false},{"id":"biz_overview","type":"prose","category":"補助事業の内容","question":"新規事業の概要をお聞かせください。","sub":"","example":"【誰に】向けて、【何を】、【どのように】提供する事業です。","wants":["誰に","何を","どのように提供するか"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"product_name","type":"text","category":"補助事業の内容","question":"主な製品・サービスの名称をお聞かせください。","sub":"","example":"例）【製品・サービスの名称】","checks":[],"maxChars":50,"unitNote":"50字以内","optional":false},{"id":"product_content","type":"prose","category":"補助事業の内容","question":"主な製品・サービスの内容と、お客様に提供する価値をお聞かせください。","sub":"","example":"【製品・サービスの内容】を提供し、お客様の【困りごと】を【どう解決するか】を実現します。","wants":["製品・サービスの内容","お客様に提供する価値"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"target","type":"prose","category":"補助事業の内容","question":"どんなお客様（国・地域を含む）を対象にするのか、なぜその方々に選ばれるのかをお聞かせください。","sub":"市場の大きさや成長の見込みも、分かる範囲でお書きください。","example":"【お客様の層】の【困りごと・ニーズ】に応えます。【選ばれる理由】があり、市場は【大きさ・成長の見込み】です。","wants":["対象のお客様（法人／個人、業種、規模など）","お客様の困りごと・ニーズ","選ばれる理由","市場の大きさ・成長の見込み（数字で）"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"readiness","type":"prose","category":"補助事業の内容","question":"事業化に向けた現在の準備状況と、お客様のニーズの裏づけをお聞かせください。","sub":"お客様からの問い合わせ・引き合い・要望のほか、試作、市場調査、取引先との話し合いなど、ここまでに進めたことをお書きください。","example":"【時期】に【進めたこと（試作・調査・打診など）】を行い、【問い合わせ・引き合いの件数や内容】があります。","wants":["ここまでに進めたこと","お客様からの問い合わせ・引き合い・要望（件数や内容）","これから必要な準備"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"competitors","type":"prose","category":"補助事業の内容","question":"主な競合と、その状況をお聞かせください。","sub":"競合がいない場合は、その理由をお書きください。","example":"競合は【社名や業態】で、【価格・強み・弱み】です。","wants":["競合の名前や業態","競合の価格・強み・弱み"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"differentiation","type":"prose","category":"補助事業の内容","question":"競合と比べて、新規事業が優位に立てる理由（差別化のポイント）をお聞かせください。","sub":"","example":"【競合との違い】があるため、【優位に立てる理由】があります。","wants":["競合との違い","優位に立てる理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"sales_strategy","type":"prose","category":"補助事業の内容","question":"どのように売っていくのかをお聞かせください。","sub":"価格、販路、販促の3つの観点でお書きください。","example":"価格は【単価の目安】、販路は【どこで・誰が売るか】、販促は【お客様への知らせ方】で進めます。","wants":["価格（単価の目安）","販路（どこで・誰が売るか）","販促（お客様への知らせ方）"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"sales_outlook","type":"prose","category":"補助事業の内容","question":"新規事業の売上の見通しをお聞かせください。","sub":"","example":"【時期】から売上が立ち、単価【○】円、月【○】件を見込みます。根拠は【理由】です。","wants":["売上が立ち始める時期","単価","販売数量・件数","その根拠"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"strength_use","type":"prose","category":"補助事業の内容","question":"新規事業で、特に活かせる自社の強みをお聞かせください。","sub":"","example":"【強み】を、【どの場面で】活かします。","wants":["活かせる強み","どの場面で活かすか"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"gl_existing","type":"prose","category":"グローバル枠の質問","question":"現在の販売先の国・地域をお聞かせください。","sub":"商社などを通じて販売している国・地域も含めます。海外が初めての場合は、その旨をお書きください。","example":"現在は【国・地域】に販売しています。（海外が初めての場合は「海外は初めて」とご記入ください）","wants":[],"checks":[],"minChars":2,"short":true,"optional":false},{"id":"gl_target","type":"prose","category":"グローバル枠の質問","question":"今回新たに販売先とする国・地域をお聞かせください。","sub":"","example":"新たに【国・地域】を対象とします。選んだ理由は【理由】です。","wants":["新たに対象とする国・地域","選んだ理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"gl_detail","type":"prose","category":"グローバル枠の質問","question":"海外市場開拓（輸出）に向けた具体的な内容をお聞かせください。","sub":"","example":"【自社の製品・サービス】を活用し、国内の【拠点の強化内容】を行います。【国・地域】に進出するきっかけは【きっかけ】です。","wants":["活用する自社の製品・サービス","国内の製造・提供拠点の強化の内容","新たな国・地域に進出するきっかけ"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"existing_sales","type":"table","category":"売上・人員","question":"既存事業の売上について、今期の見込みと来期の見込みを、下の表にご記入ください。","sub":"決算書は別途いただくため、見込みの金額と、前期と比べて大きく変わる場合の理由をお書きください。大きな変化がなければ、「大きな変化はない」とご記入ください。","checks":[],"optional":false,"cols":[{"key":"this","label":"今期の見込み（円）","type":"number","unit":"円","min":0},{"key":"next","label":"来期の見込み（円）","type":"number","unit":"円","min":0},{"key":"why","label":"前期と比べて大きく変わる場合の理由","type":"textarea"}],"rowLabels":["既存事業の売上（税抜）"],"requiredRows":1,"examples":[["300000000","306000000","大きな変化はない"]]},{"id":"project_sales","type":"number","category":"売上・人員","question":"新規事業で、事業計画期間の1年あたりに見込まれる売上（税抜）をお聞かせください。","sub":"事業計画期間の、平均的な1年分の金額で構いません。","example":"例）30000000","checks":[],"unit":"円","min":0,"optional":false},{"id":"exec_count","type":"number","category":"売上・人員","question":"役員の人数をお聞かせください。","sub":"","example":"例）3","checks":[],"unit":"人","min":0,"optional":false},{"id":"hr_plan","type":"prose","category":"売上・人員","question":"現時点で決まっている、今後の採用・退職・休職の予定をお聞かせください。","sub":"決まっている範囲で結構です。","example":"【いつ頃】に、【誰（職種）】が【採用・退職・休職】の予定です。","wants":["時期","対象（職種など）","人数"],"checks":[],"minChars":20,"none":"現時点で決まっている予定はない","short":false,"optional":false},{"id":"team_internal","type":"table","category":"実施体制","question":"新規事業に関わる社内の方について、下の表にご記入ください。","sub":"","checks":[],"optional":false,"cols":[{"key":"name","label":"氏名","type":"text"},{"key":"role","label":"役職・担当内容","type":"textarea"},{"key":"exp","label":"関連する経験・経歴","type":"textarea"}],"rowLabels":["1","2","3","4"],"requiredRows":1,"examples":[["A","【役職】。【この事業での担当内容】","【事業の遂行に関連する経験・経歴】"]]},{"id":"team_status","type":"prose","category":"実施体制","question":"社内の体制づくりの進み具合をお聞かせください。","sub":"足りない人材・能力がある場合は、その確保の見通しもお書きください。","example":"本事業には【人数】名が従事します。不足している【能力・人材】は、【採用・育成】で確保する見通しです。","wants":["従事する人数","足りない能力・人材","確保の見通し（採用・育成）"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"team_external","type":"table","category":"実施体制","question":"新規事業に関わる社外の会社（システム会社、機器販売会社、工事会社など）について、下の表にご記入ください。","sub":"決まっている会社があれば、ご記入ください。","checks":[],"optional":true,"cols":[{"key":"company","label":"会社名","type":"text"},{"key":"role","label":"役割","type":"textarea"},{"key":"detail","label":"内容","type":"textarea"}],"rowLabels":["1","2","3"],"requiredRows":0,"examples":[["株式会社○○","【役割（開発・設備導入など）】","【具体的な内容】"]]},{"id":"equipment","type":"prose","category":"実施体制","question":"導入を予定している設備・システムの概要と、それが必要な理由をお聞かせください。","sub":"","example":"【設備・システムの名称】を導入します。【今の困りごと】を解決するために必要です。導入の規模は【想定する生産量・利用量】に基づきます。","wants":["導入する設備・システムの名称や種類","必要な理由（今の何が困っているか）","導入の規模の根拠（想定する生産量・利用量）"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"layoff","type":"select","category":"実施体制","question":"既存事業の縮小・廃止や省人化により、従業員の解雇を伴いますか。","sub":"定年退職や自己都合退職は含みません。","checks":[],"options":["なし","あり"],"optional":false},{"id":"layoff_support","type":"prose","category":"実施体制","question":"再就職の支援など、従業員への配慮をお聞かせください。","sub":"","example":"【配慮の内容】を行います。","wants":["配慮の内容"],"checks":[],"minChars":5,"showIf":{"id":"layoff","in":["あり"]},"short":false,"optional":false},{"id":"permit","type":"select","category":"実施体制","question":"新規事業の実施に、許認可や資格の取得は必要ですか。","sub":"","checks":[],"options":["不要","必要"],"optional":false},{"id":"permit_detail","type":"prose","category":"実施体制","question":"取得が必要な許認可・資格と、取得の時期の目途をお聞かせください。","sub":"","example":"【許認可・資格】が必要で、【時期】までに取得する予定です。","wants":["許認可・資格の名称","取得の時期の目途"],"checks":[],"minChars":5,"showIf":{"id":"permit","in":["必要"]},"short":false,"optional":false},{"id":"schedule_years","type":"select","category":"実施体制","question":"補助事業が終わってからの計画（事業計画期間）は、何年間にしますか。","sub":"3〜5年間から選べます。選んだ年数に合わせて、次の表の行が変わります。","checks":[],"options":["3年間","4年間","5年間"],"optional":false},{"id":"schedule","type":"table","category":"実施体制","question":"事業計画期間の、年度ごとの目標と取り組みを、下の表にご記入ください。","sub":"補助事業が終わった翌年度を、1年度目としてください。","checks":[],"optional":false,"cols":[{"key":"goal","label":"その年の目標・節目","type":"textarea"},{"key":"work","label":"その年の主な取り組み","type":"textarea"},{"key":"owner","label":"主な担当者","type":"text"}],"rowLabels":["1年度目","2年度目","3年度目","4年度目","5年度目"],"requiredRows":5,"rowShowIf":[null,null,null,{"id":"schedule_years","in":["4年間","5年間"]},{"id":"schedule_years","in":["5年間"]}],"examples":[["【その年の目標】","【その年の主な取り組み】","【担当者】"]]},{"id":"challenges","type":"prose","category":"実施体制","question":"事業を進めるうえで想定される課題と、その対応策をお聞かせください。","sub":"","example":"【想定される課題】があります。対応策は【対応策】です。","wants":["想定される課題（技術・販売・人材・資金など）","課題ごとの対応策"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"fund_unit","type":"select","category":"資金","question":"資金の調達方法を、金額と割合のどちらで回答しますか。","sub":"下の2つの表を、ここで選んだ単位で統一してご記入ください。","checks":[],"options":["金額（円）で回答する","割合（%）で回答する"],"optional":false},{"id":"fund_total","type":"table","category":"資金","question":"新規事業に必要な資金を、どのように用意しますか。","sub":"補助金を除いた、自社で用意する分についてご記入ください。割合で回答する場合は、その合計を100%としてください。金額が確定していない場合は、見込みで構いません。0の場合は、「0」とご記入ください。","checks":[],"optional":false,"cols":[{"key":"value","label":"金額または割合","type":"number","min":0,"unitBy":{"id":"fund_unit","map":{"金額（円）で回答する":"円","割合（%）で回答する":"%"}}},{"key":"source","label":"調達先（0の場合は空欄で可）","type":"text","optionalIfZero":true}],"rowLabels":["自己資金","借入金","その他"],"requiredRows":3,"examples":[["【金額または割合】","【手元の預金／○○銀行／リースなど】"]],"sumCheck":{"unitId":"fund_unit","percentOption":"割合（%）で回答する","col":0}},{"id":"fund_bridge","type":"table","category":"資金","question":"補助金が入るまでの間、立て替える資金をどのように用意しますか。","sub":"補助金は後払いのため、先に自社で全額を支払う必要があります。上の表と同じ単位でご記入ください。割合で回答する場合は、その合計を100%としてください。","checks":[],"optional":false,"cols":[{"key":"value","label":"金額または割合","type":"number","min":0,"unitBy":{"id":"fund_unit","map":{"金額（円）で回答する":"円","割合（%）で回答する":"%"}}},{"key":"source","label":"調達先（0の場合は空欄で可）","type":"text","optionalIfZero":true}],"rowLabels":["自己資金","借入金","その他"],"requiredRows":3,"examples":[["【金額または割合】","【手元の預金／○○銀行／リースなど】"]],"sumCheck":{"unitId":"fund_unit","percentOption":"割合（%）で回答する","col":0}},{"id":"public_effect","type":"prose","category":"公的補助の必要性・政策面","question":"新規事業が、地域や取引先、雇用などに与える良い影響をお聞かせください。","sub":"取引先への波及、雇用、地域への貢献、デジタル技術や新しい仕組みを使う点など、当てはまるものをお書きください。","example":"【取引先・地域・雇用】に【良い影響】があります。新たに【人数】名程度の雇用を見込みます。","wants":["取引先（仕入先・販売先）への波及","新たに生まれる雇用（人数の目安）","地域や社会への貢献","デジタル技術や新しい仕組みを使う点"],"checks":["num"],"minChars":20,"short":false,"optional":false},{"id":"without_subsidy","type":"prose","category":"公的補助の必要性・政策面","question":"もし補助金がなかった場合、この事業はどうなりますか。","sub":"","example":"補助金がない場合は【縮小・延期・断念】になります。【自社の資金だけでは難しい理由】があるためです。","wants":["補助金がない場合の対応（縮小・延期・断念など）","自社の資金だけでは難しい理由"],"checks":[],"minChars":20,"short":false,"optional":false},{"id":"cluster","type":"select","category":"公的補助の必要性・政策面","question":"新規事業の内容は、国の「戦略17分野」のどれかに当てはまりますか。","sub":"当てはまるものがなければ、「該当しない」をお選びください。","checks":[],"options":["①AI・半導体","②デジタル・サイバーセキュリティ","③情報通信","④量子","⑤防衛産業","⑥航空・宇宙","⑦海洋","⑧造船","⑨マテリアル（重要鉱物・部素材）","⑩合成生物学・バイオ","⑪創薬・先端医療","⑫資源・エネルギー安全保障・GX","⑬フュージョンエネルギー","⑭フードテック","⑮防災・国土強靭化","⑯港湾ロジスティクス","⑰コンテンツ","該当しない"],"optional":false},{"id":"cluster_reason","type":"prose","category":"公的補助の必要性・政策面","question":"その分野に当てはまる理由をお聞かせください。","sub":"","example":"【分野】に当てはまる理由は【理由】です。","wants":["当てはまる理由"],"checks":[],"minChars":10,"showIf":{"id":"cluster","notIn":["該当しない"]},"short":false,"optional":false}]}};
+
+(function () {
+  'use strict';
+  var HOURS = CONFIG.DRAFT_HOURS || 168;
+  var FRAME = '';
+  try { FRAME = new URLSearchParams(window.location.search).get('type') || ''; } catch (e) { FRAME = ''; }
+  var FORM = FORMS[FRAME] || null;
+  var KEY = 'hs_shinmono_draft_' + FRAME;
+  var S = { dirty: false, timer: null, storage: false, sending: false, warned: false };
+  var RID = newRid();
+  var REG = {};                       // 質問ID → { it, rowEl, errEl, trs }
+  var UNITS = [];                     // 単位が選択で変わる欄
+
+  /* 写真の添付に関する設定 */
+  var MAX_PHOTOS = 5;
+  var MAX_SIDE = 2000;
+  var QUALITY = 0.88;
+  var ASIS_BYTES = 1024 * 1024;
+  var MAX_PHOTO_BYTES = 3 * 1024 * 1024;
+  var MAX_TOTAL_B64 = 14 * 1024 * 1024;
+  var PHOTO_SOURCES = [
+    ['own', '自社で撮影・作成した写真'],
+    ['ownsite', '自社ホームページに掲載している写真'],
+    ['other', 'その他のサイトの写真']
+  ];
+  var CONSENT_BODY = '著作権・肖像権などの権利上、事業計画書に使用して問題がないこと（自社で撮影・作成したもの、または使用・掲載の許諾を得ているもの）、および、人の顔が分かる写真を含まないことを確認しました。';
+  var HP_OPTIONS = [['yes', '使用してよい'], ['confirm', '使用する前に、写真ごとに確認してほしい'], ['no', '使用しない']];
+  var HP = { permission: '', url: '', note: '' };
+  var elHpDetail, elHpUrl, elHpNote, elHpRadios = [], elHpErr, elHpRow;
+  var PH = { list: [], consent: false, msg: '' };
+  var elPhotoList, elPhotoAdd, elPhotoMsg, elConsentRow, elConsentWrap, elConsent, elConsentText, elFile;
+
+  /* 回答に含まれていてほしい要素（足りなくても送信はできますが、確認を出します） */
+  var CHECKS = {
+    num: { label: '数字（人数・金額・件数など）', test: function (t) { return /[0-9０-９]|[一二三四五六七八九十百千万]/.test(t); } },
+    freq: { label: '頻度', test: function (t) { return /(毎日|毎週|毎月|毎回|随時|常時|数回|数件|[週月日年]に?\s*[0-9０-９一二三四五六七八九十]|[0-9０-９一二三四五六七八九十]+\s*(回|件)|1日|1週|1か月|1ヶ月|1カ月)/.test(t); } },
+    time: { label: 'かかる時間', test: function (t) { return /(([0-9０-９]+|[一二三四五六七八九十]+)\s*(分|時間)|半日|終日|一日中|丸一日|丸1日)/.test(t); } }
+  };
+
+  /* ---------- 小さな道具 ---------- */
+  function h(tag, attrs) {
+    var e = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (k === 'class') e.className = attrs[k];
+      else if (k === 'text') e.textContent = attrs[k];
+      else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] !== false && attrs[k] !== null && attrs[k] !== undefined) e.setAttribute(k, attrs[k]);
+    });
+    function add(c) {
+      if (c === null || c === undefined || c === false) return;
+      if (Array.isArray(c)) { c.forEach(add); return; }
+      e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    }
+    for (var i = 2; i < arguments.length; i++) add(arguments[i]);
+    return e;
+  }
+  function newRid() {
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', out = '', i;
+    var buf = new Uint8Array(32);
+    if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(buf);
+    else for (i = 0; i < 32; i++) buf[i] = Math.floor(Math.random() * 256);
+    for (i = 0; i < 32; i++) out += chars.charAt(buf[i] % chars.length);
+    return out;
+  }
+  function lsGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { window.localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  function lsDel(k) { try { window.localStorage.removeItem(k); } catch (e) {} }
+  function hhmm(ms) {
+    var d = new Date(ms);
+    return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+  function fields() { return Array.prototype.slice.call(document.querySelectorAll('[data-id]')); }
+  function el(id) { return document.querySelector('[data-id="' + id + '"]'); }
+  function valueOf(id) { var f = el(id); return f ? f.value : ''; }
+  function autosize(t) {
+    if (!t || t.tagName !== 'TEXTAREA') return;
+    var min = t.classList.contains('short') ? 54 : (t.closest('td') ? 50 : 112);
+    t.style.height = 'auto';
+    t.style.height = Math.max(min, t.scrollHeight + 2) + 'px';
+  }
+  function markSelect(sel) { sel.classList.toggle('empty', sel.value === ''); }
+  function toHalf(s) {
+    return String(s).replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); })
+      .replace(/[．]/g, '.').replace(/[，、]/g, ',').replace(/[％]/g, '%');
+  }
+  /* 数字の欄の入力（「1,000」「30%」「300万」のような書き方のうち、数字だけのものを数値にする） */
+  function parseNum(s) {
+    var t = toHalf(s).replace(/[,\s%円人]/g, '');
+    if (t === '' || !/^-?[0-9]+(\.[0-9]+)?$/.test(t)) return null;
+    return Number(t);
+  }
+  function jpYen(n) {
+    if (n >= 100000000) return (n / 100000000).toLocaleString('ja-JP', { maximumFractionDigits: 2 }) + '億円';
+    if (n >= 10000) return (n / 10000).toLocaleString('ja-JP', { maximumFractionDigits: 1 }) + '万円';
+    return n.toLocaleString('ja-JP') + '円';
+  }
+  function splitH(t) {
+    var m = /^(.*?)（(.*)）$/.exec(t);
+    return m && m[1] ? { main: m[1], sub: m[2] } : { main: t, sub: '' };
+  }
+  function isShown(cond) {
+    if (!cond) return true;
+    var v = valueOf(cond.id);
+    if (cond.in) return cond.in.indexOf(v) >= 0;
+    if (cond.notIn) return v !== '' && cond.notIn.indexOf(v) < 0;
+    return true;
+  }
+  function rowHidden(it) { return REG[it.id].rowEl.style.display === 'none'; }
+  function noneBox(it) { return it.none ? document.getElementById('n_' + it.id) : null; }
+  function itemValue(it) {
+    var cb = noneBox(it);
+    if (cb && cb.checked) return it.none;
+    return valueOf(it.id);
+  }
+
+  /* ---------- 画面の部品 ---------- */
+  var elStatus, elCount, elNotice, elActions, elMsg, elSubmit, elHp, elWarn;
+
+  function labelBlock(it, main, sub, optional, wants) {
+    var hasNo = !!it;
+    return h('div', { class: 'lab' },
+      h('div', { class: 'line' + (hasNo ? '' : ' nonum') },
+        hasNo ? h('span', { class: 'no', text: '' }) : null, main,
+        optional ? h('span', { class: 'optchip', text: '任意' }) : null),
+      sub ? h('div', { class: 'sub' + (hasNo ? '' : ' nonum'), text: sub }) : null,
+      (wants && wants.length >= 2) ? h('div', { class: 'wants', text: '書いてほしいこと：' + wants.join('／') }) : null);
+  }
+  function row(label, field, wide) {
+    return h('div', { class: 'row' + (wide ? ' wide' : '') }, label, h('div', { class: 'fld' }, field));
+  }
+
+  /* タイトル（「事業計画作成用」は黒、「ヒアリングシート」はアクセント色） */
+  function titleEl() {
+    var parts = META.title.split(' ');
+    return h('h1', {}, parts[0] + ' ', h('span', { class: 'accent', text: parts.slice(1).join(' ') }));
+  }
+
+  function showStart() {
+    var app = document.getElementById('app');
+    app.innerHTML = '';
+    document.title = META.title;
+    app.appendChild(h('div', { class: 'hero' },
+      h('p', { class: 'eyebrow', text: META.program }), titleEl(),
+      h('p', { class: 'lead', text: 'お申込みの申請枠をお選びください。' }),
+      h('div', { class: 'choices' }, FRAMES.map(function (f) {
+        return h('a', { class: 'choice', href: '?type=' + f.key },
+          h('b', { text: f.name }),
+          h('span', { class: 'desc', text: f.desc }), h('span', { class: 'go', text: 'この枠で始める →' }));
+      }))));
+  }
+
+  function render() {
+    var app = document.getElementById('app');
+    app.innerHTML = '';
+    document.title = META.title + '（' + FORM.name + '）';
+    S.storage = lsSet('hs_test', '1'); lsDel('hs_test');
+
+    elStatus = h('span', { text: S.storage ? '入力内容は、この端末に自動で保存されます。' : '' });
+    elCount = h('span', { text: '' });
+    elActions = h('div', { class: 'actions' });
+    showRestartButton();
+    app.appendChild(h('div', { class: 'bar' },
+      h('div', { class: 'left' }, h('span', { class: 'brand' }, h('i', { class: 'dot' }), 'ヒアリングシート'), elStatus, elCount), elActions));
+
+    app.appendChild(h('div', { class: 'hero' },
+      h('p', { class: 'eyebrow', text: META.program }), titleEl(),
+      h('div', { class: 'badge', text: '今回のお申込み：' + FORM.name }),
+      h('p', { class: 'lead', text: META.note }),
+      h('p', { class: 'req', text: 'すべての項目にご回答ください。（「任意」と書かれた項目と、写真は、該当する場合のみで構いません）' })));
+    elNotice = h('div', { id: 'notices' },
+      h('div', { class: 'notice', text: '審査では、社長ご自身にオンラインで内容をご説明いただく場合があります。社長ご自身が説明できる内容でご記入ください。' }));
+    app.appendChild(elNotice);
+
+    elHp = h('input', { type: 'text', name: 'website', class: 'hp', tabindex: '-1', autocomplete: 'off', 'aria-hidden': 'true' });
+    app.appendChild(h('div', { class: 'hp', 'aria-hidden': 'true' }, elHp));
+
+    // 基本情報
+    FORM.basic.forEach(function (b) {
+      var inp = h('input', { type: 'text', 'data-id': b.id, autocomplete: 'off', id: 'f_' + b.id, placeholder: b.placeholder || '' });
+      wire(inp);
+      var err = h('div', { class: 'err', role: 'alert' });
+      var r = row(labelBlock(null, b.label, b.sub || '', false), h('div', {}, inp, err));
+      REG['basic_' + b.id] = { rowEl: r, errEl: err };
+      app.appendChild(r);
+    });
+
+    // 質問
+    var cat = null;
+    FORM.items.forEach(function (it) {
+      if (it.category !== cat) { cat = it.category; app.appendChild(h('h2', { class: 'sec', text: cat })); }
+      var r;
+      if (it.type === 'prose') r = renderProse(it);
+      else if (it.type === 'text') r = renderText(it);
+      else if (it.type === 'number') r = renderNumber(it);
+      else if (it.type === 'select') r = renderSelect(it);
+      else r = renderTable(it);
+      r.setAttribute('data-qid', it.id);
+      REG[it.id].rowEl = r;
+      app.appendChild(r);
+    });
+
+    // 写真
+    app.appendChild(h('h2', { class: 'sec', text: '写真について' }));
+    app.appendChild(renderHp());
+    app.appendChild(renderPhotos());
+    app.appendChild(renderConsent());
+
+    // 送信
+    elMsg = h('div', { class: 'msg', role: 'alert' });
+    elWarn = h('div', { id: 'warn' });
+    elSubmit = h('button', { class: 'btn primary', type: 'button', onclick: submit, text: '送信する' });
+    app.appendChild(h('div', { class: 'submit' }, elWarn, elSubmit, elMsg,
+      h('p', { class: 'lead', text: 'ご不明な点は、送信前に担当者までご連絡ください。送信後の修正が必要な場合も、担当者までご連絡ください。' })));
+    refreshAll();
+  }
+
+  function wire(f, qid) {
+    var h2 = function () { autosize(f); touched(f); };
+    f.addEventListener('input', h2);
+  }
+  function touched(f) {
+    S.warned = false;
+    if (elWarn) elWarn.innerHTML = '';
+    if (elSubmit) elSubmit.textContent = '送信する';
+    var row = f && f.closest ? f.closest('[data-qid]') : null;
+    if (row) { row.classList.remove('bad'); var e = row.querySelector('.err'); if (e) e.textContent = ''; }
+    var b = f && f.closest ? f.closest('.row') : null;
+    if (b) { b.classList.remove('bad'); var e2 = b.querySelector('.err'); if (e2) e2.textContent = ''; }
+    markDirty();
+    refreshAll();
+  }
+
+  function renderProse(it) {
+    var ta = h('textarea', { 'data-id': it.id, class: it.short ? 'short' : '', id: 'f_' + it.id, 'aria-label': it.question, placeholder: it.example || '' });
+    wire(ta);
+    var err = h('div', { class: 'err', role: 'alert' });
+    var parts = [ta];
+    if (it.none) {
+      var cb = h('input', { type: 'checkbox', id: 'n_' + it.id });
+      cb.addEventListener('change', function () {
+        ta.disabled = cb.checked;
+        if (cb.checked) { ta.value = ''; autosize(ta); }
+        touched(cb);
+      });
+      parts.push(h('label', { class: 'nonecheck', for: 'n_' + it.id }, cb, h('span', { text: it.none })));
+    }
+    REG[it.id] = { it: it, errEl: err };
+    return row(labelBlock(it, it.question, it.sub || '', !!it.optional, it.wants), h('div', {}, parts, err));
+  }
+  function renderText(it) {
+    var inp = h('input', { type: 'text', 'data-id': it.id, id: 'f_' + it.id, autocomplete: 'off', 'aria-label': it.question, placeholder: it.example || '', maxlength: it.maxChars || false });
+    wire(inp);
+    var err = h('div', { class: 'err', role: 'alert' });
+    REG[it.id] = { it: it, errEl: err };
+    return row(labelBlock(it, it.question, it.sub || '', !!it.optional, null),
+      h('div', {}, inp, it.unitNote ? h('div', { class: 'hint', text: it.unitNote }) : null, err));
+  }
+  function renderNumber(it) {
+    var inp = h('input', { type: 'text', 'data-id': it.id, id: 'f_' + it.id, autocomplete: 'off', inputmode: 'decimal', 'aria-label': it.question, placeholder: it.example || '数字' });
+    wire(inp);
+    var yen = h('div', { class: 'yen' });
+    inp._yenEl = yen; inp._unit = it.unit || '';
+    inp.addEventListener('input', function () { refreshYen(inp); });
+    var err = h('div', { class: 'err', role: 'alert' });
+    REG[it.id] = { it: it, errEl: err };
+    return row(labelBlock(it, it.question, it.sub || '', !!it.optional, null),
+      h('div', {}, h('div', { class: 'withunit' }, inp, h('span', { class: 'unit', text: it.unit || '' })), it.unit === '円' ? yen : null, err));
+  }
+  function refreshYen(inp) {
+    if (!inp._yenEl) return;
+    var unit = inp._unitEl ? inp._unitEl.textContent : inp._unit;
+    var n = parseNum(inp.value);
+    inp._yenEl.textContent = (unit === '円' && n !== null && inp.value !== '') ? '＝ ' + jpYen(n) : '';
+  }
+  function renderSelect(it) {
+    var sel = h('select', { 'data-id': it.id, id: 'f_' + it.id, class: 'empty', 'aria-label': it.question }, h('option', { value: '', text: '選択してください' }));
+    it.options.forEach(function (o) { sel.appendChild(h('option', { value: o, text: o })); });
+    sel.addEventListener('change', function () { markSelect(sel); touched(sel); });
+    var err = h('div', { class: 'err', role: 'alert' });
+    REG[it.id] = { it: it, errEl: err };
+    return row(labelBlock(it, it.question, it.sub || '', !!it.optional, null), h('div', {}, sel, err));
+  }
+
+  /* 表の列の幅 */
+  function colWidths(it) {
+    var w = [it.rowLabels[0].length > 3 ? 18 : 8];
+    it.cols.forEach(function (c) { w.push(c.type === 'textarea' ? 34 : (c.type === 'number' ? 18 : 24)); });
+    var sum = w.reduce(function (a, b) { return a + b; }, 0);
+    return w.map(function (x) { return x / sum * 100; });
+  }
+  function renderTable(it) {
+    var widths = colWidths(it);
+    var colgroup = h('colgroup');
+    widths.forEach(function (w) { colgroup.appendChild(h('col', { style: 'width:' + w.toFixed(1) + '%' })); });
+    var thead = h('thead', {}, h('tr', {}, [h('th', { class: 'num', text: '' })].concat(it.cols.map(function (c) {
+      var hh = splitH(c.label);
+      return h('th', { class: c.type === 'number' ? 'num' : '' }, hh.main, hh.sub ? h('span', { class: 'hsub', text: hh.sub }) : null);
+    }))));
+    var tbody = h('tbody');
+    (it.examples || []).forEach(function (ex) {
+      var tds = [h('td', { class: 'rowno', 'data-label': '' }, h('span', { class: 'chip', text: '記入例' }))];
+      ex.forEach(function (v, i) { tds.push(h('td', { 'data-label': splitH(it.cols[i].label).main, text: String(v) })); });
+      tbody.appendChild(h('tr', { class: 'exrow' }, tds));
+    });
+    var trs = [];
+    it.rowLabels.forEach(function (lab, ri) {
+      var cells = [];
+      var tds = [h('td', { class: /^[0-9]+$/.test(lab) ? 'rowno' : 'rowlab', 'data-label': '', text: lab })];
+      it.cols.forEach(function (c, ci) {
+        var id = it.id + '_r' + (ri + 1) + '_c' + (ci + 1);
+        var hh = splitH(c.label);
+        var f, holder;
+        var aria = lab + ' ' + hh.main;
+        if (c.type === 'textarea') {
+          f = h('textarea', { 'data-id': id, 'aria-label': aria, placeholder: 'ご記入ください' });
+          holder = f;
+        } else if (c.type === 'number') {
+          f = h('input', { type: 'text', 'data-id': id, autocomplete: 'off', inputmode: 'decimal', 'aria-label': aria, placeholder: '数字' });
+          var unitEl = h('span', { class: 'unit', text: c.unit || '' });
+          var yen = h('div', { class: 'yen' });
+          f._yenEl = yen; f._unit = c.unit || '';
+          if (c.unitBy) { f._unitEl = unitEl; UNITS.push({ span: unitEl, by: c.unitBy, f: f }); }
+          f.addEventListener('input', function () { refreshYen(f); });
+          holder = h('div', {}, h('div', { class: 'withunit' }, f, unitEl), (c.unit === '円' || c.unitBy) ? yen : null);
+        } else {
+          f = h('input', { type: 'text', 'data-id': id, autocomplete: 'off', 'aria-label': aria, placeholder: 'ご記入ください' });
+          holder = f;
+        }
+        wire(f);
+        cells.push({ id: id, f: f });
+        tds.push(h('td', { 'data-label': hh.main }, holder));
+      });
+      var tr = h('tr', {}, tds);
+      trs.push({ tr: tr, cells: cells, label: lab, showIf: it.rowShowIf ? it.rowShowIf[ri] : null });
+      tbody.appendChild(tr);
+    });
+    var sumEl = it.sumCheck ? h('div', { class: 'sumline' }) : null;
+    var err = h('div', { class: 'err', role: 'alert' });
+    REG[it.id] = { it: it, errEl: err, trs: trs, sumEl: sumEl };
+    var r = row(labelBlock(it, it.question, it.sub || '', !!it.optional, null),
+      h('div', {}, h('div', { class: 'tablewrap' }, h('table', {}, colgroup, thead, tbody)), sumEl, err), true);
+    r.querySelector('.lab').style.marginBottom = '4px';
+    return r;
+  }
+
+  /* ---------- 表示の切り替え・番号・単位 ---------- */
+  function applyVisibility() {
+    FORM.items.forEach(function (it) {
+      var r = REG[it.id];
+      if (!r || !r.rowEl) return;
+      var show = isShown(it.showIf);
+      r.rowEl.style.display = show ? '' : 'none';
+      if (r.trs) r.trs.forEach(function (t) { t.tr.style.display = isShown(t.showIf) ? '' : 'none'; });
+    });
+  }
+  function renumber() {
+    var n = 0;
+    FORM.items.forEach(function (it) {
+      var r = REG[it.id];
+      if (!r || !r.rowEl || r.rowEl.style.display === 'none') return;
+      n++;
+      var no = r.rowEl.querySelector('.lab .no');
+      if (no) no.textContent = String(n);
+      r.no = n;
+    });
+  }
+  function refreshUnits() {
+    UNITS.forEach(function (u) {
+      var v = valueOf(u.by.id);
+      u.span.textContent = u.by.map[v] || '';
+      refreshYen(u.f);
+    });
+    FORM.items.forEach(function (it) {
+      var r = REG[it.id];
+      if (!r || !r.sumEl) return;
+      var sc = it.sumCheck, v = valueOf(sc.unitId), sum = 0, any = false;
+      r.trs.forEach(function (t) {
+        var n = parseNum(t.cells[sc.col].f.value);
+        if (n !== null) { sum += n; any = true; }
+      });
+      if (v === sc.percentOption) r.sumEl.textContent = '合計：' + (Math.round(sum * 100) / 100) + '%（100%になるようにご記入ください）';
+      else if (v) r.sumEl.textContent = any ? '合計：' + sum.toLocaleString('ja-JP') + '円（' + jpYen(sum) + '）' : '';
+      else r.sumEl.textContent = '';
+    });
+  }
+  function refreshAll() {
+    applyVisibility(); renumber(); refreshUnits(); updateCount();
+  }
+
+  /* ---------- 入力のチェック ---------- */
+  function bad(msg) { return { state: 'bad', msg: msg }; }
+  function evalItem(it) {
+    if (it.type === 'table') return evalTable(it);
+    var v = String(itemValue(it) || '').trim();
+    if (v === '') return it.optional ? { state: 'ok', empty: true } : { state: 'empty', msg: 'ご回答をお願いします。' };
+    if (it.none && v === it.none) return { state: 'ok' };
+    if (it.type === 'select') return { state: 'ok' };
+    if (it.type === 'number') {
+      var x = parseNum(v);
+      if (x === null) return bad('数字（半角）でご記入ください。');
+      if (it.min !== undefined && x < it.min) return bad(it.min + '以上の数字でご記入ください。');
+      return { state: 'ok' };
+    }
+    if (it.maxChars && v.length > it.maxChars) return bad(it.maxChars + '字以内でご記入ください。');
+    if (it.minChars && v.length < it.minChars) return bad('もう少し具体的にご記入ください。（' + it.minChars + '字以上）');
+    return { state: 'ok' };
+  }
+  function evalTable(it) {
+    var r = REG[it.id], anyFilled = false, problem = '', needEmpty = false;
+    r.trs.forEach(function (t, ri) {
+      if (problem || t.tr.style.display === 'none') return;
+      var vals = t.cells.map(function (c) { return String(c.f.value).trim(); });
+      var any = vals.some(function (v) { return v !== ''; });
+      var required = ri < it.requiredRows;
+      if (!any && !required) return;
+      if (any) anyFilled = true;
+      var zero = it.cols[0].type === 'number' && parseNum(vals[0]) === 0;
+      for (var ci = 0; ci < it.cols.length; ci++) {
+        var c = it.cols[ci], v = vals[ci];
+        if (v === '') {
+          if (c.optionalIfZero && zero) continue;
+          if (!any) { needEmpty = true; return; }
+          problem = '「' + t.label + '」の行を、すべてご記入ください。'; return;
+        }
+        if (c.type === 'number') {
+          var x = parseNum(v);
+          if (x === null) { problem = '「' + t.label + '」の行は、数字（半角）でご記入ください。'; return; }
+          if (c.min !== undefined && x < c.min) { problem = '「' + t.label + '」の行は、' + c.min + '以上の数字でご記入ください。'; return; }
+          var unit = c.unitBy ? (c.unitBy.map[valueOf(c.unitBy.id)] || '') : (c.unit || '');
+          if (unit === '%' && x > 100) { problem = '「' + t.label + '」の行は、100以下の数字でご記入ください。'; return; }
+        }
+      }
+    });
+    if (problem) return bad(problem);
+    if (needEmpty) return { state: 'empty', msg: '表の各行をご記入ください。' };
+    if (!anyFilled) return it.optional || it.requiredRows === 0 ? { state: 'ok', empty: true } : { state: 'empty', msg: 'ご回答をお願いします。' };
+    if (it.sumCheck && valueOf(it.sumCheck.unitId) === it.sumCheck.percentOption) {
+      var sum = 0;
+      r.trs.forEach(function (t) { var n = parseNum(t.cells[it.sumCheck.col].f.value); if (n !== null) sum += n; });
+      if (Math.abs(sum - 100) > 0.01) return bad('合計が100%になるようにご記入ください。（現在 ' + (Math.round(sum * 100) / 100) + '%）');
+    }
+    return { state: 'ok' };
+  }
+  function updateCount() {
+    if (!elCount || !FORM) return;
+    var total = 0, done = 0;
+    FORM.items.forEach(function (it) {
+      if (it.optional || rowHidden(it)) return;
+      total++;
+      var e = evalItem(it);
+      if (e.state === 'ok' && !e.empty) done++;
+    });
+    elCount.textContent = '入力済み ' + done + ' / ' + total + ' 問';
+  }
+  function setErr(id, msg) {
+    var r = REG[id]; if (!r) return;
+    r.errEl.textContent = msg;
+    r.rowEl.classList.add('bad');
+  }
+  function clearErrors() {
+    Object.keys(REG).forEach(function (k) {
+      var r = REG[k];
+      if (r && r.errEl) r.errEl.textContent = '';
+      if (r && r.rowEl) r.rowEl.classList.remove('bad');
+    });
+    if (elHpErr) elHpErr.textContent = '';
+    if (elHpRow) elHpRow.classList.remove('bad');
+    elMsg.textContent = ''; elMsg.classList.remove('bad');
+  }
+
+  /* ---------- ホームページに掲載している写真の使用可否 ---------- */
+  function renderHp() {
+    var opts = h('div', { class: 'opts', role: 'radiogroup', 'aria-label': 'ホームページに掲載している写真の使用' });
+    elHpRadios = [];
+    HP_OPTIONS.forEach(function (o) {
+      var inp = h('input', { type: 'radio', name: 'hp_permission', value: o[0], id: 'hp_perm_' + o[0] });
+      inp.addEventListener('change', function () {
+        HP.permission = o[0]; refreshHp(); refreshConsent(); markDirty();
+        if (elHpRow) { elHpRow.classList.remove('bad'); elHpErr.textContent = ''; }
+      });
+      elHpRadios.push(inp);
+      opts.appendChild(h('label', { class: 'optcard', for: 'hp_perm_' + o[0] }, inp, h('span', { text: o[1] })));
+    });
+    elHpUrl = h('input', { type: 'text', autocomplete: 'off', inputmode: 'url', id: 'hp_url', placeholder: '例）https://www.example.co.jp/' });
+    elHpUrl.addEventListener('input', function () { HP.url = elHpUrl.value; markDirty(); });
+    elHpNote = h('textarea', { class: 'short', id: 'hp_note', placeholder: '例）会社概要のページの写真を使ってほしい／社員が写っている写真は使わないでほしい' });
+    elHpNote.addEventListener('input', function () { HP.note = elHpNote.value; autosize(elHpNote); markDirty(); });
+    elHpDetail = h('div', { class: 'hpdetail' },
+      h('div', { class: 'pf' }, h('label', {}, 'ホームページのURL', h('span', { class: 'opt2', text: '任意' })), elHpUrl),
+      h('div', { class: 'pf' }, h('label', {}, '補足', h('span', { class: 'opt2', text: '任意・使ってほしい写真、使ってほしくない写真など' })), elHpNote));
+    elHpErr = h('div', { class: 'err', role: 'alert' });
+    refreshHp();
+    var sub = 'ホームページに掲載されている写真から、事業内容が分かるものを選んで、事業計画書に使用する場合があります。\n人の顔が分かる写真は使用しません。';
+    elHpRow = row(labelBlock(null, '御社のホームページに掲載している写真を、事業計画書に使用してもよいですか。', sub, false), h('div', {}, opts, elHpDetail, elHpErr), true);
+    return elHpRow;
+  }
+  function refreshHp() {
+    elHpRadios.forEach(function (r) {
+      r.checked = (r.value === HP.permission);
+      var lab = r.parentNode; if (lab && lab.classList) lab.classList.toggle('on', r.checked);
+    });
+    var show = HP.permission === 'yes' || HP.permission === 'confirm';
+    elHpDetail.style.display = show ? '' : 'none';
+    elHpUrl.value = HP.url; elHpNote.value = HP.note;
+    if (show) autosize(elHpNote);
+  }
+  function clearHp() {
+    HP = { permission: '', url: '', note: '' };
+    if (elHpDetail) refreshHp();
+    if (elConsentRow) refreshConsent();
+  }
+
+  /* ---------- 写真の添付 ---------- */
+  function fmtSize(b) { return b >= 1024 * 1024 ? (b / 1024 / 1024).toFixed(1) + 'MB' : Math.max(1, Math.round(b / 1024)) + 'KB'; }
+  function dataBytes(dataUrl) { var i = dataUrl.indexOf(','); return Math.floor((dataUrl.length - i - 1) * 3 / 4); }
+  function baseName(n) { return String(n || 'photo').replace(/\.[^.]*$/, '').replace(/[\\\/:*?"<>|]/g, '_').slice(0, 40) || 'photo'; }
+  function readAsBase64(file) {
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onload = function () { resolve(String(fr.result).split(',')[1] || ''); };
+      fr.onerror = function () { reject(new Error('read')); };
+      fr.readAsDataURL(file);
+    });
+  }
+  /* 写真を読み込み、大きければ縮小する（縮小しても、A4に載せて印刷品質に足りる大きさを保つ） */
+  function processFile(file) {
+    return new Promise(function (resolve, reject) {
+      if (!/^image\//.test(file.type || '')) { reject(new Error('type')); return; }
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var w = img.naturalWidth, hgt = img.naturalHeight, longSide = Math.max(w, hgt);
+        if (!w || !hgt) { URL.revokeObjectURL(url); reject(new Error('decode')); return; }
+        var asIs = file.size <= ASIS_BYTES && longSide <= MAX_SIDE && /^image\/(jpeg|png)$/.test(file.type);
+        if (asIs) {
+          readAsBase64(file).then(function (b64) {
+            resolve({ name: file.name, mime: file.type, b64: b64, w: w, h: hgt, bytes: file.size, thumb: url, origName: file.name });
+          }, function () { URL.revokeObjectURL(url); reject(new Error('read')); });
+          return;
+        }
+        var scale = Math.min(1, MAX_SIDE / longSide), cw = Math.round(w * scale), ch = Math.round(hgt * scale);
+        var canvas = document.createElement('canvas'); canvas.width = cw; canvas.height = ch;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cw, ch); ctx.drawImage(img, 0, 0, cw, ch);
+        var q = QUALITY, data = canvas.toDataURL('image/jpeg', q);
+        while (dataBytes(data) > MAX_PHOTO_BYTES && q > 0.6) { q -= 0.08; data = canvas.toDataURL('image/jpeg', q); }
+        resolve({ name: /\.jpe?g$/i.test(file.name) ? file.name : baseName(file.name) + '.jpg', mime: 'image/jpeg', b64: data.split(',')[1], w: cw, h: ch, bytes: dataBytes(data), thumb: url, origName: file.name });
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('decode')); };
+      img.src = url;
+    });
+  }
+
+  function renderPhotos() {
+    elFile = h('input', { type: 'file', accept: 'image/*', multiple: 'multiple', tabindex: '-1', 'aria-hidden': 'true', style: 'display:none' });
+    elFile.addEventListener('change', function () {
+      var files = Array.prototype.slice.call(elFile.files || []);
+      elFile.value = '';
+      addFiles(files);
+    });
+    elPhotoList = h('div', { class: 'photolist' });
+    elPhotoMsg = h('div', { class: 'photomsg', role: 'status' });
+    elPhotoAdd = h('button', { class: 'btn addph', type: 'button', onclick: function () { elFile.click(); } });
+    var box = h('div', {}, elPhotoAdd, elFile, elPhotoMsg, elPhotoList,
+      h('div', { class: 'hint', text: '※ 写真は自動保存されません。送信前にこのページを閉じると、写真の選び直しが必要です。' }));
+    var sub = [
+      '最大' + MAX_PHOTOS + '枚まで添付できます。写真は、自動的に、印刷に十分な大きさに整えて送られます。',
+      '現在の作業の様子、機器・設備、置き場所やレイアウトなど、事業内容が分かる写真が向いています。',
+      '人の顔が分かる写真（社長・役員・従業員・お客様など）は、事業計画書に掲載できません。写り込みのない写真をお選びください。',
+      'ホームページなどの写真を使う場合は、掲載元を選び、URLをご記入ください。'
+    ].map(function (t) { return '・' + t; }).join('\n');
+    refreshPhotos();
+    return row(labelBlock(null, '事業計画書に載せてもよい写真があれば、添付してください。', sub, true), box, true);
+  }
+
+  /* 写真の権利などの確認（ホームページの写真と、添付した写真で、共通の1つのチェック） */
+  function consentNeeded() { return HP.permission === 'yes' || PH.list.length > 0; }
+  function consentText() {
+    var hp = HP.permission === 'yes', ph = PH.list.length > 0;
+    return (hp && ph ? '添付した写真とホームページの写真' : hp ? 'ホームページの写真' : '添付した写真') + 'について、' + CONSENT_BODY;
+  }
+  function renderConsent() {
+    elConsent = h('input', { type: 'checkbox', id: 'f_photo_consent' });
+    elConsent.addEventListener('change', function () { PH.consent = elConsent.checked; markDirty(); });
+    elConsentText = h('span', {});
+    elConsentWrap = h('label', { class: 'consent', for: 'f_photo_consent' }, elConsent, elConsentText);
+    elConsentRow = row(labelBlock(null, '写真の権利などの確認', '', false), elConsentWrap, true);
+    refreshConsent();
+    return elConsentRow;
+  }
+  function refreshConsent() {
+    if (!elConsentRow) return;
+    var need = consentNeeded();
+    if (!need) PH.consent = false;
+    elConsentRow.style.display = need ? '' : 'none';
+    elConsent.checked = !!PH.consent;
+    elConsentText.textContent = consentText();
+  }
+
+  function refreshPhotos() {
+    elPhotoList.innerHTML = '';
+    PH.list.forEach(function (p, i) { elPhotoList.appendChild(photoCard(p, i)); });
+    var left = MAX_PHOTOS - PH.list.length;
+    elPhotoAdd.textContent = left > 0 ? '＋ 写真を追加する（あと' + left + '枚）' : '写真は最大' + MAX_PHOTOS + '枚までです';
+    elPhotoAdd.disabled = left <= 0;
+    elPhotoMsg.textContent = PH.msg;
+    refreshConsent();
+  }
+
+  function photoCard(p, i) {
+    var thumb = p.status === 'ready'
+      ? h('img', { class: 'thumb', src: p.thumb, alt: '添付写真' + (i + 1) })
+      : h('div', { class: 'thumb', text: '処理中…' });
+    var right = h('div', {});
+    if (p.status === 'ready') {
+      var cap = h('input', { type: 'text', autocomplete: 'off', placeholder: '例）現在の商品の保管場所（倉庫）', value: p.caption, 'aria-label': '写真' + (i + 1) + 'の説明' });
+      cap.addEventListener('input', function () { p.caption = cap.value; });
+      var src = h('select', { 'aria-label': '写真' + (i + 1) + 'の掲載元', class: p.source ? '' : 'empty' }, h('option', { value: '', text: '選択してください' }));
+      PHOTO_SOURCES.forEach(function (o) { var op = h('option', { value: o[0], text: o[1] }); if (p.source === o[0]) op.selected = true; src.appendChild(op); });
+      var urlIn = h('input', { type: 'text', autocomplete: 'off', inputmode: 'url', placeholder: '例）https://www.example.co.jp/company/', value: p.url, 'aria-label': '写真' + (i + 1) + 'の掲載元のURL' });
+      urlIn.addEventListener('input', function () { p.url = urlIn.value; });
+      var urlBox = h('div', { class: 'pf' }, h('label', {}, '掲載元のURL', h('span', { class: 'opt', text: '任意・分かれば、写真を載せているページのURL' })), urlIn);
+      urlBox.style.display = (p.source && p.source !== 'own') ? '' : 'none';
+      src.addEventListener('change', function () {
+        p.source = src.value; src.classList.toggle('empty', !src.value);
+        urlBox.style.display = (p.source && p.source !== 'own') ? '' : 'none';
+      });
+      right.appendChild(h('div', { class: 'pf' }, h('label', {}, '写真の説明', h('span', { class: 'opt', text: '何の写真か（任意）' })), cap));
+      right.appendChild(h('div', { class: 'pf' }, h('label', {}, '掲載元', h('span', { class: 'opt', text: '必須' })), src));
+      right.appendChild(urlBox);
+      right.appendChild(h('div', { class: 'pinfo' },
+        h('span', { text: '写真' + (i + 1) + '｜' + p.w + '×' + p.h + 'px｜' + fmtSize(p.bytes) }),
+        h('button', { class: 'btn', type: 'button', text: 'この写真を削除', onclick: function () { removePhoto(p); } })));
+    } else {
+      right.appendChild(h('p', { class: 'hint', text: '「' + p.name + '」を読み込んでいます…' }));
+    }
+    return h('div', { class: 'photo' }, thumb, right);
+  }
+
+  function removePhoto(p) {
+    var i = PH.list.indexOf(p);
+    if (i >= 0) PH.list.splice(i, 1);
+    if (p.thumb) { try { URL.revokeObjectURL(p.thumb); } catch (e) {} }
+    PH.msg = '';
+    refreshPhotos();
+  }
+
+  function addFiles(files) {
+    PH.msg = '';
+    var room = MAX_PHOTOS - PH.list.length;
+    if (!files.length) return;
+    if (room <= 0) { PH.msg = '写真は最大' + MAX_PHOTOS + '枚までです。'; refreshPhotos(); return; }
+    if (files.length > room) { PH.msg = '写真は最大' + MAX_PHOTOS + '枚までです。先頭の' + room + '枚だけ追加しました。'; files = files.slice(0, room); }
+    files.forEach(function (f) {
+      var p = { status: 'processing', name: f.name, caption: '', source: '', url: '' };
+      PH.list.push(p);
+      processFile(f).then(function (r) {
+        p.status = 'ready'; p.name = r.name; p.mime = r.mime; p.b64 = r.b64; p.w = r.w; p.h = r.h; p.bytes = r.bytes; p.thumb = r.thumb; p.origName = r.origName;
+        refreshPhotos();
+      }, function () {
+        var i = PH.list.indexOf(p); if (i >= 0) PH.list.splice(i, 1);
+        PH.msg = '「' + f.name + '」は読み込めませんでした。JPEGまたはPNG形式の写真をお選びください。';
+        refreshPhotos();
+      });
+    });
+    refreshPhotos();
+  }
+
+  function clearPhotos() {
+    PH.list.forEach(function (p) { if (p.thumb) { try { URL.revokeObjectURL(p.thumb); } catch (e) {} } });
+    PH.list = []; PH.consent = false; PH.msg = '';
+    if (elPhotoList) refreshPhotos();
+  }
+
+  /* 送信前の写真のチェック。問題があれば、お客様向けの文を返す */
+  function checkPhotos() {
+    if (PH.list.some(function (p) { return p.status !== 'ready'; })) return '写真の読み込みが終わるまで、少しお待ちください。';
+    for (var i = 0; i < PH.list.length; i++) {
+      if (!PH.list[i].source) return '写真' + (i + 1) + 'の掲載元を選択してください。';
+    }
+    if (consentNeeded() && !PH.consent) return '写真の権利などの確認（チェック欄）にチェックをお願いします。';
+    var total = PH.list.reduce(function (a, p) { return a + p.b64.length; }, 0);
+    if (total > MAX_TOTAL_B64) return '写真の合計サイズが大きすぎます。枚数を減らして、もう一度お試しください。';
+    return '';
+  }
+  function photosPayload() {
+    return PH.list.map(function (p) {
+      return { name: p.name, origName: p.origName || p.name, mime: p.mime, data: p.b64, caption: (p.caption || '').trim(), source: p.source, url: p.source === 'own' ? '' : (p.url || '').trim() };
+    });
+  }
+
+  /* ---------- 途中保存（この端末のブラウザに保存） ---------- */
+  function setStatus(t) { if (elStatus) elStatus.textContent = t; }
+  function markDirty() {
+    S.dirty = true;
+    if (S.storage) setStatus('入力中…');
+    clearTimeout(S.timer);
+    S.timer = setTimeout(saveNow, 1500);
+  }
+  function collectAll() {
+    var a = {};
+    fields().forEach(function (f) { if (f.value !== '') a[f.getAttribute('data-id')] = f.value; });
+    if (FORM) FORM.items.forEach(function (it) { var cb = noneBox(it); if (cb && cb.checked) a[it.id] = it.none; });
+    return a;
+  }
+  function setField(id, v) {
+    var it = REG[id] && REG[id].it;
+    if (it && it.none && v === it.none) {
+      var cb = noneBox(it);
+      if (cb) { cb.checked = true; var ta = el(id); if (ta) { ta.value = ''; ta.disabled = true; } }
+      return;
+    }
+    var f = el(id);
+    if (!f) return;
+    f.value = v; autosize(f); if (f.tagName === 'SELECT') markSelect(f);
+  }
+  function saveNow() {
+    if (!S.dirty || !S.storage) return;
+    S.dirty = false;
+    var ok = lsSet(KEY, JSON.stringify({ t: Date.now(), a: collectAll(), hp: HP, consent: PH.consent }));
+    setStatus(ok ? '自動保存しました（' + hhmm(Date.now()) + '）' : '自動保存できませんでした。');
+  }
+  setInterval(saveNow, 15000);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) saveNow(); });
+  window.addEventListener('pagehide', saveNow);
+
+  function restore() {
+    var raw = lsGet(KEY);
+    if (!raw) return;
+    try {
+      var d = JSON.parse(raw);
+      if (!d || !d.a || Date.now() - d.t > HOURS * 3600 * 1000) { lsDel(KEY); return; }
+      var ids = Object.keys(d.a);
+      var hasHp = d.hp && d.hp.permission;
+      if (!ids.length && !hasHp) return;
+      ids.forEach(function (id) { setField(id, d.a[id]); });
+      if (hasHp) { HP = { permission: d.hp.permission, url: d.hp.url || '', note: d.hp.note || '' }; PH.consent = !!d.consent && HP.permission === 'yes'; refreshHp(); refreshConsent(); }
+      refreshAll();
+      elNotice.appendChild(h('div', { class: 'notice', text: hhmm(d.t) + ' に保存した入力内容を復元しました。続きからご記入ください。' }));
+    } catch (e) { lsDel(KEY); }
+  }
+
+  function showRestartButton() {
+    elActions.innerHTML = '';
+    elActions.appendChild(h('button', { class: 'btn', type: 'button', text: '最初から入力し直す', onclick: askRestart }));
+  }
+  function askRestart() {
+    elActions.innerHTML = '';
+    elActions.appendChild(h('span', { text: '入力した内容をすべて消しますか？' }));
+    elActions.appendChild(h('button', { class: 'btn', type: 'button', text: '消して最初から', onclick: function () {
+      lsDel(KEY);
+      fields().forEach(function (f) { f.value = ''; f.disabled = false; autosize(f); if (f.tagName === 'SELECT') markSelect(f); if (f._yenEl) f._yenEl.textContent = ''; });
+      FORM.items.forEach(function (it) { var cb = noneBox(it); if (cb) cb.checked = false; });
+      S.dirty = false;
+      clearPhotos(); clearHp();
+      elNotice.innerHTML = '';
+      elNotice.appendChild(h('div', { class: 'notice', text: '審査では、社長ご自身にオンラインで内容をご説明いただく場合があります。社長ご自身が説明できる内容でご記入ください。' }));
+      clearErrors();
+      setStatus('入力内容を消去しました。');
+      refreshAll();
+      showRestartButton();
+    } }));
+    elActions.appendChild(h('button', { class: 'btn', type: 'button', text: 'やめる', onclick: showRestartButton }));
+  }
+
+  /* ---------- 送信（Apps Scriptの受付へ送る） ---------- */
+  function fail(msg) {
+    S.sending = false;
+    elSubmit.disabled = false; elSubmit.textContent = '送信する';
+    saveNow();
+    elMsg.classList.add('bad');
+    elMsg.textContent = msg + ' 入力内容はこの端末に保存されていますので、しばらくしてからもう一度お試しください。';
+  }
+  /* 送信する回答（表示している質問のものだけ） */
+  function collectVisible() {
+    var a = {};
+    FORM.basic.forEach(function (b) { var v = valueOf(b.id).trim(); if (v !== '') a[b.id] = v; });
+    FORM.items.forEach(function (it) {
+      if (rowHidden(it)) return;
+      var r = REG[it.id];
+      if (it.type === 'table') {
+        r.trs.forEach(function (t) {
+          if (t.tr.style.display === 'none') return;
+          t.cells.forEach(function (c) { var v = String(c.f.value).trim(); if (v !== '') a[c.id] = v; });
+        });
+      } else {
+        var v = String(itemValue(it) || '').trim();
+        if (v !== '') a[it.id] = v;
+      }
+    });
+    return a;
+  }
+  function firstFocus(rowEl) {
+    if (!rowEl) return;
+    rowEl.scrollIntoView({ block: 'center' });
+    var f = rowEl.querySelector('textarea:not(:disabled), input[type=text], select, input[type=radio], input[type=checkbox]');
+    if (f && f.focus) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } }
+  }
+  function submit() {
+    if (S.sending) return;
+    clearErrors();
+    var count = 0, first = null;
+    FORM.basic.forEach(function (b) {
+      if (valueOf(b.id).trim() === '') { setErr('basic_' + b.id, 'ご回答をお願いします。'); count++; first = first || REG['basic_' + b.id].rowEl; }
+    });
+    FORM.items.forEach(function (it) {
+      if (rowHidden(it)) return;
+      var e = evalItem(it);
+      if (e.state !== 'ok') { setErr(it.id, e.msg); count++; first = first || REG[it.id].rowEl; }
+    });
+    if (!HP.permission) {
+      elHpErr.textContent = '選択をお願いします。'; elHpRow.classList.add('bad'); count++; first = first || elHpRow;
+    }
+    var photoErr = checkPhotos();
+    if (photoErr) { count++; first = first || elPhotoAdd.closest('.row'); }
+    if (count) {
+      elMsg.classList.add('bad');
+      elMsg.textContent = '未回答、または内容に不備のある質問が' + count + '件あります。赤字のメッセージが出ている質問をご確認ください。' + (photoErr ? '（' + photoErr + '）' : '');
+      firstFocus(first);
+      return;
+    }
+    if (!CONFIG.ENDPOINT) {
+      elMsg.classList.add('bad');
+      elMsg.textContent = '送信先が設定されていません。お手数ですが、担当者までご連絡ください。（管理者向け：index.html の CONFIG.ENDPOINT を設定してください）';
+      return;
+    }
+    // 回答に含まれていてほしい要素の確認（送信はできます）
+    if (!S.warned) {
+      var warns = [];
+      FORM.items.forEach(function (it) {
+        if (rowHidden(it) || it.type !== 'prose' || !it.checks || !it.checks.length) return;
+        var v = String(itemValue(it) || '').trim();
+        if (!v || v === it.none) return;
+        var miss = it.checks.filter(function (k) { return CHECKS[k] && !CHECKS[k].test(v); }).map(function (k) { return CHECKS[k].label; });
+        if (miss.length) warns.push('質問' + REG[it.id].no + '：' + miss.join('・') + 'が、入っていないようです。');
+      });
+      if (warns.length) {
+        elWarn.innerHTML = '';
+        elWarn.appendChild(h('div', { class: 'warnbox' }, h('b', { text: '次の質問は、念のため、ご確認ください。' }),
+          h('ul', {}, warns.map(function (w) { return h('li', { text: w }); })),
+          h('div', { text: '分かる範囲で書き足していただくと、審査で伝わりやすくなります。このままでよい場合は、もう一度ボタンを押してください。' })));
+        S.warned = true;
+        elSubmit.textContent = 'このまま送信する';
+        elWarn.scrollIntoView({ block: 'center' });
+        return;
+      }
+    }
+    send();
+  }
+  function send() {
+    S.sending = true;
+    elSubmit.disabled = true; elSubmit.textContent = '送信中…';
+    var ctrl = ('AbortController' in window) ? new AbortController() : null;
+    var hasPhotos = PH.list.length > 0;
+    if (hasPhotos) elMsg.textContent = '写真を送信しています。完了するまで、このページを閉じないでください。';
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, hasPhotos ? 240000 : 90000) : null;
+    fetch(CONFIG.ENDPOINT, {
+      method: 'POST',
+      body: JSON.stringify({
+        rid: RID, frame: FRAME, answers: collectVisible(), hp: elHp ? elHp.value : '',
+        photos: photosPayload(), photoConsent: PH.list.length ? PH.consent : false,
+        consentText: (consentNeeded() && PH.consent) ? consentText() : '',
+        hpPhoto: HP.permission ? { permission: HP.permission, url: HP.url.trim(), note: HP.note.trim(), confirmed: HP.permission === 'yes' && PH.consent } : null
+      }),
+      redirect: 'follow',
+      signal: ctrl ? ctrl.signal : undefined
+    })
+      .then(function (r) { if (timer) clearTimeout(timer); return r.json(); })
+      .then(function (res) {
+        if (res && res.ok) { done(); }
+        else { fail('送信できませんでした。' + (res && res.error ? res.error : '')); }
+      })
+      .catch(function () { if (timer) clearTimeout(timer); fail('通信できませんでした。'); });
+  }
+  function done() {
+    lsDel(KEY);
+    clearPhotos(); clearHp();
+    var app = document.getElementById('app');
+    app.innerHTML = '';
+    app.appendChild(h('div', { class: 'done' },
+      h('h1', {}, 'ご回答', h('span', { class: 'accent', text: 'ありがとうございました。' })),
+      h('p', { text: '送信が完了しました。内容を確認のうえ、担当者よりご連絡いたします。' })));
+  }
+
+  if (!FORM) { showStart(); return; }
+  render();
+  restore();
+})();
+</script>
+</body>
+</html>
