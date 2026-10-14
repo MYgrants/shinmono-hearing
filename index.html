@@ -227,7 +227,7 @@
 /* ================= 管理者用の設定（ここだけ編集してください） ================= */
 var CONFIG = {
   // Apps ScriptのウェブアプリのURL（「…/exec」で終わるもの）を、引用符の中に貼り付けてください
-  ENDPOINT: 'https://script.google.com/macros/s/AKfycbx0W6l2GTPgj-IdSF2PFrya9EP2SJtbjvw8hVxo2UMPiq8G6-9_d9xjsf76780C2eQeXg/exec',
+  ENDPOINT: '',
   // 入力途中の内容を、お客様の端末に保持する時間（時間）。全問必須のため7日にしています
   DRAFT_HOURS: 168
 };
@@ -406,7 +406,7 @@ var FORMS = {"kakushin":{"name":"革新的新製品・サービス枠","basic":[
       h('p', { class: 'eyebrow', text: META.program }), titleEl(),
       h('div', { class: 'badge', text: '今回のお申込み：' + FORM.name }),
       h('p', { class: 'lead', text: META.note }),
-      h('p', { class: 'req', text: 'すべての項目にご回答ください。（「任意」と書かれた項目と、写真は、該当する場合のみで構いません）' })));
+      h('p', { class: 'req', text: '分かる範囲でご記入ください。分からない項目は、空欄のままでも送信できます。（後ほど、担当者がご確認します）' })));
     elNotice = h('div', { id: 'notices' },
       h('div', { class: 'notice', text: '審査では、社長ご自身にオンラインで内容をご説明いただく場合があります。社長ご自身が説明できる内容でご記入ください。' }));
     app.appendChild(elNotice);
@@ -632,7 +632,7 @@ var FORMS = {"kakushin":{"name":"革新的新製品・サービス枠","basic":[
   function evalItem(it) {
     if (it.type === 'table') return evalTable(it);
     var v = String(itemValue(it) || '').trim();
-    if (v === '') return it.optional ? { state: 'ok', empty: true } : { state: 'empty', msg: 'ご回答をお願いします。' };
+    if (v === '') return { state: 'ok', empty: true };
     if (it.none && v === it.none) return { state: 'ok' };
     if (it.type === 'select') return { state: 'ok' };
     if (it.type === 'number') {
@@ -642,7 +642,6 @@ var FORMS = {"kakushin":{"name":"革新的新製品・サービス枠","basic":[
       return { state: 'ok' };
     }
     if (it.maxChars && v.length > it.maxChars) return bad(it.maxChars + '字以内でご記入ください。');
-    if (it.minChars && v.length < it.minChars) return bad('もう少し具体的にご記入ください。（' + it.minChars + '字以上）');
     return { state: 'ok' };
   }
   function evalTable(it) {
@@ -651,16 +650,13 @@ var FORMS = {"kakushin":{"name":"革新的新製品・サービス枠","basic":[
       if (problem || t.tr.style.display === 'none') return;
       var vals = t.cells.map(function (c) { return String(c.f.value).trim(); });
       var any = vals.some(function (v) { return v !== ''; });
-      var required = ri < it.requiredRows;
-      if (!any && !required) return;
-      if (any) anyFilled = true;
+      if (!any) return;
+      anyFilled = true;
       var zero = it.cols[0].type === 'number' && parseNum(vals[0]) === 0;
       for (var ci = 0; ci < it.cols.length; ci++) {
         var c = it.cols[ci], v = vals[ci];
         if (v === '') {
-          if (c.optionalIfZero && zero) continue;
-          if (!any) { needEmpty = true; return; }
-          problem = '「' + t.label + '」の行を、すべてご記入ください。'; return;
+          continue;
         }
         if (c.type === 'number') {
           var x = parseNum(v);
@@ -672,11 +668,11 @@ var FORMS = {"kakushin":{"name":"革新的新製品・サービス枠","basic":[
       }
     });
     if (problem) return bad(problem);
-    if (needEmpty) return { state: 'empty', msg: '表の各行をご記入ください。' };
-    if (!anyFilled) return it.optional || it.requiredRows === 0 ? { state: 'ok', empty: true } : { state: 'empty', msg: 'ご回答をお願いします。' };
+    if (!anyFilled) return { state: 'ok', empty: true };
     if (it.sumCheck && valueOf(it.sumCheck.unitId) === it.sumCheck.percentOption) {
-      var sum = 0;
-      r.trs.forEach(function (t) { var n = parseNum(t.cells[it.sumCheck.col].f.value); if (n !== null) sum += n; });
+      var sum = 0, full = true;
+      r.trs.forEach(function (t) { if (t.tr.style.display === 'none') return; var n = parseNum(t.cells[it.sumCheck.col].f.value); if (n !== null) sum += n; else full = false; });
+      if (!full) return { state: 'ok' };
       if (Math.abs(sum - 100) > 0.01) return bad('合計が100%になるようにご記入ください。（現在 ' + (Math.round(sum * 100) / 100) + '%）');
     }
     return { state: 'ok' };
@@ -685,7 +681,7 @@ var FORMS = {"kakushin":{"name":"革新的新製品・サービス枠","basic":[
     if (!elCount || !FORM) return;
     var total = 0, done = 0;
     FORM.items.forEach(function (it) {
-      if (it.optional || rowHidden(it)) return;
+      if (rowHidden(it)) return;
       total++;
       var e = evalItem(it);
       if (e.state === 'ok' && !e.empty) done++;
@@ -1041,7 +1037,7 @@ var FORMS = {"kakushin":{"name":"革新的新製品・サービス枠","basic":[
     var count = 0, first = null;
     FORM.basic.forEach(function (b) {
       if (valueOf(b.id).trim() === '') { setErr('basic_' + b.id, 'ご回答をお願いします。'); count++; first = first || REG['basic_' + b.id].rowEl; }
-    });
+    });  // 法人名・担当者は、ご連絡のために必要です
     FORM.items.forEach(function (it) {
       if (rowHidden(it)) return;
       var e = evalItem(it);
@@ -1054,7 +1050,7 @@ var FORMS = {"kakushin":{"name":"革新的新製品・サービス枠","basic":[
     if (photoErr) { count++; first = first || elPhotoAdd.closest('.row'); }
     if (count) {
       elMsg.classList.add('bad');
-      elMsg.textContent = '未回答、または内容に不備のある質問が' + count + '件あります。赤字のメッセージが出ている質問をご確認ください。' + (photoErr ? '（' + photoErr + '）' : '');
+      elMsg.textContent = '内容に不備のある質問が' + count + '件あります。赤字のメッセージが出ている質問をご確認ください。' + (photoErr ? '（' + photoErr + '）' : '');
       firstFocus(first);
       return;
     }
